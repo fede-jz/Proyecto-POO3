@@ -1,0 +1,71 @@
+# =========================
+# Sistemas Operativos
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# IDEs y Editores
+# =========================
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.project
+.classpath
+.settings/
+*.swp
+*~
+
+# =========================
+# Compilación y Salidas (Java / Python / C# / C++)
+# =========================
+# Java
+*.class
+*.jar
+*.war
+*.ear
+target/
+build/
+bin/
+out/
+.gradle/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+.venv/
+venv/
+env/
+dist/
+*.egg-info/
+
+# .NET / C#
+bin/
+obj/
+*.userprefs
+packages/
+
+# C / C++
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Node / JS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs y Temporales
+*.log
+*.tmp
+*.bak
