@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from db import pool
 from controllers import procesos_controller
-from routers import procesos_router
+from routers import procesos_router, auth_router
 from fastapi import FastAPI
 
 #-----------API----------------
@@ -17,6 +17,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(procesos_router.router, prefix="/procesos", tags=["Procesos"])
+app.include_router(auth_router.router, prefix="/auth", tags=["Autenticación"])
+
 
 #----------CLI DE PRUEBA--------
 def mostrar_tabla_procesos(procesos):
