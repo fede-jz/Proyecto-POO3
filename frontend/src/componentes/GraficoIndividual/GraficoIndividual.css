@@ -78,6 +78,7 @@
   font-weight: 600;
   color: #e2e8f0;
   text-align: right;
+  word-break: break-all;
 }
 
 /* Contenedor específico para los PIDs largos con scroll interno limpio */
@@ -94,6 +95,165 @@
   font-size: 0.75rem;
   color: #cbd5e1;
 }
+
+/* =========================================
+   SECCIÓN DE ETIQUETAS EN INSPECCIÓN
+   ========================================= */
+
+.seccion-etiquetas-inspeccion {
+  background-color: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 0.625rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.header-tags-inspeccion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-abrir-add-tag {
+  background-color: transparent;
+  border: 1px solid #334155;
+  color: #38bdf8;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-abrir-add-tag:hover {
+  background-color: #1e293b;
+  border-color: #38bdf8;
+}
+
+.lista-tags-inspeccion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.badge-etiqueta-inspeccion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background-color: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.tag-texto {
+  line-height: 1;
+}
+
+.btn-eliminar-tag {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.btn-eliminar-tag:hover {
+  color: #f87171;
+}
+
+.sin-etiquetas-aviso {
+  color: #64748b;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.form-agregar-tag-inspeccion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid #1e293b;
+}
+
+.input-tag-inspeccion {
+  flex: 1;
+  min-width: 110px;
+  background-color: #090c10;
+  border: 1px solid #334155;
+  color: #f1f5f9;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  outline: none;
+}
+
+.input-tag-inspeccion:focus {
+  border-color: #38bdf8;
+}
+
+.btn-guardar-tag {
+  background-color: #2563eb;
+  border: none;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-cancelar-tag {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-cancelar-tag:hover {
+  color: #f1f5f9;
+}
+
+.sugerencias-rapidas-inspeccion {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+
+.btn-preset-tag {
+  background-color: #161d26;
+  border: 1px solid #242c36;
+  color: #94a3b8;
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.btn-preset-tag:hover {
+  background-color: #1e293b;
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+/* =========================================
+   BARRAS DE CONSUMO
+   ========================================= */
 
 .metricas-grafico-box {
   display: flex;
@@ -130,7 +290,8 @@
   border-radius: 9999px;
   transition: width 0.4s ease-in-out;
 }
-/*Barra de consumo individual*/
+
+/* Barra de consumo individual */
 .cpu-fill {
   background: linear-gradient(to right, #d97706, #f1be3a);
 }
@@ -145,6 +306,6 @@
 }
 
 .ram-valor {
-  color:#619242;
+  color: #619242;
   font-weight: 600;
 }
