@@ -1,27 +1,25 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from './componentes/Navbar/Navbar';
-import { TarjetaMetrica } from './componentes/TarjetaMetrica/TarjetaMetrica';
-import { TablaProcesos } from './componentes/TablaProcesos/TablaProcesos';
+import { MonitoreoVista } from './vistas/MonitoreoVista';
+import { LoginVista } from './vistas/LoginVista';
+import { UsuarioVista } from './vistas/UsuarioVista';
 import { obtenerDatosYMetricas } from './controladores/gestorProcesos';
-import { GraficoIndividual } from './componentes/GraficoIndividual/GraficoIndividual'; 
-import { PoligonoRecursos } from './componentes/PoligonoRecursos/PoligonoRecursos';
 
 function App() {
-  const [procesos, setProcesos] = useState([]);
+  const [vistaActual, setVistaActual] = useState('monitoreo');
   const [estadoBackend, setEstadoBackend] = useState('CONECTANDO...');
+  const [usuario, setUsuario] = useState(null);
+
+  // Estados de telemetría globales
+  const [procesos, setProcesos] = useState([]);
   const [totalProcesosAgrupados, setTotalProcesosAgrupados] = useState(0);
   const [cpuTotal, setCpuTotal] = useState('0.0');
   const [ramTotal, setRamTotal] = useState('0.0');
-  const [procesoSeleccionado, setProcesoSeleccionado] = useState(null);
-  const [sidebarAbierto, setSidebarAbierto] = useState(true);
   const [horaServidor, setHoraServidor] = useState('');
   const [historialMuestras, setHistorialMuestras] = useState([]);
 
-  // Umbrales configurables (Advertencia y Crítico) - después agregamos para modificacion
-  const [umbralAdvertencia] = useState(80);
-  const [umbralCritico] = useState(90);
-
-    const actualizarInformacion = async () => {
+  // Polling continuo de métricas en segundo plano
+  const actualizarInformacion = async () => {
     const datos = await obtenerDatosYMetricas();
     setProcesos(datos.procesos);
     setEstadoBackend(datos.estadoBackend);
@@ -33,12 +31,12 @@ function App() {
     const ramNum = parseFloat(datos.ramTotal) || 0;
     const timestampActual = new Date().toLocaleTimeString();
 
-    // Agregar nueva muestra al historial, solo muestra las ultimas 30 muestras
+    // Actualiza el buffer FIFO manteniendo exactamente hasta 30 muestras
     setHistorialMuestras(prev => {
       const nuevaMuestra = { time: timestampActual, cpu: cpuNum, ram: ramNum };
       const actualizado = [...prev, nuevaMuestra];
       if (actualizado.length > 30) {
-        actualizado.shift(); // Elimina la más antigua
+        actualizado.shift();
       }
       return actualizado;
     });
@@ -63,47 +61,36 @@ function App() {
 
   return (
     <div className='app-conteiner'>
-      <Navbar status={estadoBackend} />
+      <Navbar 
+        status={estadoBackend} 
+        vistaActual={vistaActual}
+        setVistaActual={setVistaActual}
+        usuario={usuario}
+        onCerrarSesion={() => { setUsuario(null); setVistaActual('login'); }}
+      />
 
-      <main className="main-content">
-        <section className="metrics-grid">
-          <TarjetaMetrica title="CPU Total Usado" value={cpuTotal} unit="%" subtitle="" />
-          <TarjetaMetrica title="Memoria RAM Usada" value={ramTotal} unit="%" subtitle="" />
-          <TarjetaMetrica title="Procesos Únicos" value={totalProcesosAgrupados} subtitle={`Actualizado: ${horaServidor}`} />
-        </section>
+      {vistaActual === 'monitoreo' && (
+        <MonitoreoVista 
+          procesos={procesos}
+          totalProcesosAgrupados={totalProcesosAgrupados}
+          cpuTotal={cpuTotal}
+          ramTotal={ramTotal}
+          horaServidor={horaServidor}
+          historialMuestras={historialMuestras}
+        />
+      )}
 
-        <div className={`dashboard-layout-desplegable ${sidebarAbierto ? 'con-sidebar' : 'sin-sidebar'}`}>
-          <div className="columna-tabla">
-            <TablaProcesos 
-              processes={procesos} 
-              onSelectProcess={(proc) => setProcesoSeleccionado(proc)} 
-            />
-          </div>
+      {vistaActual === 'usuario' && (
+        <UsuarioVista usuario={usuario} />
+      )}
 
-          <div className="wrapper-sidebar-lateral">
-            <button 
-              className="lengueta-desplegable" 
-              onClick={() => setSidebarAbierto(!sidebarAbierto)}
-              title={sidebarAbierto ? "Ocultar panel" : "Mostrar panel y gráficos"}
-            >
-              {sidebarAbierto ? '›' : '‹'}
-            </button>
-
-            {sidebarAbierto && (
-              <aside className="columna-paneles-derecha">
-                <PoligonoRecursos 
-                  historial={historialMuestras} 
-                  umbralAdvertencia={umbralAdvertencia}
-                  umbralCritico={umbralCritico}
-                />
-                <GraficoIndividual proceso={procesoSeleccionado} />
-              </aside>
-            )}
-          </div>
-        </div>
-      </main>
+      {vistaActual === 'login' && (
+        <LoginVista onLoginExitoso={(datosUser) => { setUsuario(datosUser); setVistaActual('monitoreo'); }} />
+      )}
     </div>
   );
 }
 
 export default App;
+
+//vamos a incluir por ahora acá el tema del muestreo para manteneren segundo plano la pedidad de datos a la api

@@ -10,13 +10,51 @@
 .navbar-brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1.5rem;
 }
 
 .navbar-brand h2 {
   font-size: 1.25rem;
   letter-spacing: 0.5px;
   color: var(--accent-cyan);
+  margin: 0;
+}
+
+/* Enlaces de navegación internos */
+.navbar-nav-links {
+  display: flex;
+  gap: 0.5rem;
+  border-left: 1px solid var(--border-color);
+  padding-left: 1.5rem;
+}
+
+.nav-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-link-btn:hover {
+  color: var(--text-main);
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.nav-link-btn.activo {
+  color: var(--accent-cyan);
+  background-color: rgba(56, 189, 248, 0.08);
+  font-weight: 600;
+}
+
+/* Grupo derecho (Estado + Auth) */
+.navbar-right-group {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
 .navbar-status {
@@ -38,4 +76,34 @@
 .status-indicator.online {
   background-color: var(--accent-green);
   box-shadow: 0 0 8px var(--accent-green);
+}
+
+/* Botones de Autenticación */
+.auth-action-btn {
+  font-size: 0.8125rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.auth-action-btn.login {
+  background-color: var(--accent-blue);
+  color: #fff;
+  border: none;
+}
+
+.auth-action-btn.login:hover {
+  opacity: 0.9;
+}
+
+.auth-action-btn.logout {
+  background-color: transparent;
+  color: var(--accent-red);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+.auth-action-btn.logout:hover {
+  background-color: rgba(248, 113, 113, 0.1);
 }
