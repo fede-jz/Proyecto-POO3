@@ -66,11 +66,7 @@ class auth_controller:
     @classmethod
     def registrar_usuario(
         cls,
-        data: Optional[UsuarioCreate] = None,
-        email: Optional[str] = None,
-        contrasenia: Optional[str] = None,
-        nombre: Optional[str] = None,
-        telegram_chat_id: Optional[int] = None,
+        data: UsuarioCreate,
     ) -> dict:
         """
         Registra un usuario en la base de datos:
@@ -80,37 +76,20 @@ class auth_controller:
         4. Almacena el usuario de forma segura con consultas parametrizadas.
         """
         _asegurar_pool_abierto()
-
-        if data is not None:
-            email_val = str(data.email)
-            contrasenia_val = data.contrasenia
-            nombre_val = data.nombre
-            telegram_chat_id_val = data.telegram_chat_id
-        else:
-            email_val = email
-            contrasenia_val = contrasenia
-            nombre_val = nombre
-            telegram_chat_id_val = telegram_chat_id
-
-        if not email_val or not contrasenia_val or not nombre_val:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Los campos email, contrasenia y nombre son obligatorios."
-            )
-
+        
         # 1. Escapar caracteres especiales y normalizar datos
-        nombre_sanitizado = cls.escapar_caracteres(nombre_val)
-        email_sanitizado = cls.escapar_caracteres(email_val).lower()
+        nombre_sanitizado = cls.escapar_caracteres(data.nombre)
+        email_sanitizado = cls.escapar_caracteres(data.email).lower()
 
         # 2. Verificar si el usuario ya existe en la base de datos
         if cls.verificar_usuario_existe(email_sanitizado):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=400,
                 detail=f"El usuario con el email '{email_sanitizado}' ya se encuentra registrado."
             )
 
         # 3. Hashear la contraseña
-        contrasenia_hasheada = cls.hash_contrasenia(contrasenia_val)
+        contrasenia_hasheada = cls.hash_contrasenia(data.contrasenia)
 
         # 4. Guardar en la base de datos de forma segura
         with pool.connection() as conn:
@@ -119,7 +98,6 @@ class auth_controller:
                 email=email_sanitizado,
                 contrasenia_hash=contrasenia_hasheada,
                 nombre=nombre_sanitizado,
-                telegram_chat_id=telegram_chat_id_val,
             )
             conn.commit()
 
@@ -128,9 +106,7 @@ class auth_controller:
     @classmethod
     def iniciar_sesion(
         cls,
-        data: Optional[UsuarioLogin] = None,
-        email: Optional[str] = None,
-        contrasenia: Optional[str] = None,
+        data: UsuarioLogin,
     ) -> dict:
         """
         Inicia sesión verificando credenciales:
@@ -141,25 +117,12 @@ class auth_controller:
         """
         _asegurar_pool_abierto()
 
-        if data is not None:
-            email_val = str(data.email)
-            contrasenia_val = data.contrasenia
-        else:
-            email_val = email
-            contrasenia_val = contrasenia
-
-        if not email_val or not contrasenia_val:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Se requiere email y contraseña para iniciar sesión."
-            )
-
         # 1. Escapar caracteres especiales y normalizar correo
-        email_sanitizado = cls.escapar_caracteres(email_val).lower()
+        email_sanitizado = cls.escapar_caracteres(data.email).lower()
 
         # 2. Verificar si el usuario existe en la base de datos
         usuario = cls.obtener_usuario_por_email(email_sanitizado)
-        if not usuario or not cls.verificar_contrasenia(contrasenia_val, usuario["contrasenia_hash"]):
+        if not usuario or not cls.verificar_contrasenia(data.contrasenia, usuario["contrasenia_hash"]):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"El correo electrónico o la contraseña son incorrectos."
