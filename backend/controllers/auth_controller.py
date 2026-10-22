@@ -1,9 +1,13 @@
 import hashlib
 import html
+import os
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
 
-from fastapi import HTTPException, status
+import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 try:
     from db import pool
@@ -12,6 +16,11 @@ except ImportError:
 
 from repositories import usuarios_repositorio
 from schemas.usuario_schema import UsuarioCreate, UsuarioLogin
+
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "monitoreo-secret-key")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
+security = HTTPBearer()
 
 
 def _asegurar_pool_abierto():
@@ -131,6 +140,53 @@ class auth_controller:
         # 3. Retornar información del usuario sin exponer el hash de la contraseña
         usuario_seguro = {k: v for k, v in usuario.items() if k != "contrasenia_hash"}
         return usuario_seguro
+
+    @staticmethod
+    def crear_token(usuario: dict) -> str:
+        """Genera un JWT con la información mínima del usuario."""
+        expiracion = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
+        payload = {
+            "sub": str(usuario["id"]),
+            "email": usuario["email"],
+            "nombre": usuario["nombre"],
+            "exp": expiracion,
+            "iat": datetime.now(timezone.utc),
+        }
+        return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+    @classmethod
+    def obtener_usuario_por_id(cls, usuario_id: str) -> dict | None:
+        """Busca un usuario activo por su UUID."""
+        _asegurar_pool_abierto()
+        try:
+            with pool.connection() as conn:
+                usuario = usuarios_repositorio.buscar_por_id(conn, UUID(usuario_id))
+                if not usuario:
+                    return None
+                return {k: v for k, v in usuario.items() if k != "contrasenia_hash"}
+        except ValueError:
+            return None
+
+    @classmethod
+    def obtener_usuario_actual(cls, token: str) -> dict:
+        """Valida un JWT y devuelve el usuario autenticado."""
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        except jwt.ExpiredSignatureError as exc:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="El token expiró.") from exc
+        except jwt.InvalidTokenError as exc:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido.") from exc
+
+        usuario = cls.obtener_usuario_por_id(str(payload.get("sub")))
+        if not usuario:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado.")
+
+        return usuario
+
+    @staticmethod
+    def get_current_user_dependency(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+        """Dependency para proteger rutas con Bearer token."""
+        return auth_controller.obtener_usuario_actual(credentials.credentials)
 
 
 # Alias bajo convención CamelCase
