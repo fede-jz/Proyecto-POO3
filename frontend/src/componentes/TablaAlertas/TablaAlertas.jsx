@@ -1,33 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { AlertaSistema, SeveridadAlerta, EstadoEntregaTelegram } from '../../types';
 import './TablaAlertas.css';
-
-interface TablaAlertasProps {
-  alertas: AlertaSistema[];
-  onActualizarAlerta: (alertaActualizada: AlertaSistema) => void;
-  onMarcarReconocidas?: (ids: string[]) => void;
-}
 
 const ELEMENTOS_POR_PAGINA = 10;
 
-export const TablaAlertas: React.FC<TablaAlertasProps> = ({
+export const TablaAlertas = ({
   alertas,
   onActualizarAlerta,
   onMarcarReconocidas,
 }) => {
   // Filtros de búsqueda
   const [busqueda, setBusqueda] = useState('');
-  const [filtroSeveridad, setFiltroSeveridad] = useState<string>('todas');
-  const [filtroEstado, setFiltroEstado] = useState<string>('todos');
+  const [filtroSeveridad, setFiltroSeveridad] = useState('todas');
+  const [filtroEstado, setFiltroEstado] = useState('todos');
 
   // Paginación estilo Gmail
   const [paginaActual, setPaginaActual] = useState(1);
 
   // Selección de filas
-  const [seleccionados, setSeleccionados] = useState<string[]>([]);
+  const [seleccionados, setSeleccionados] = useState([]);
 
   // Drawer lateral para detalle de alerta
-  const [alertaSeleccionada, setAlertaSeleccionada] = useState<AlertaSistema | null>(null);
+  const [alertaSeleccionada, setAlertaSeleccionada] = useState(null);
   const [observacionTemp, setObservacionTemp] = useState('');
   const [mensajeGuardado, setMensajeGuardado] = useState(false);
 
@@ -41,7 +34,7 @@ export const TablaAlertas: React.FC<TablaAlertasProps> = ({
 
   // Cerrar drawer con Escape
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
+    const handleKey = (e) => {
       if (e.key === 'Escape' && alertaSeleccionada) {
         setAlertaSeleccionada(null);
       }
@@ -97,7 +90,7 @@ export const TablaAlertas: React.FC<TablaAlertasProps> = ({
     }
   };
 
-  const handleToggleRow = (id: string, e: React.MouseEvent) => {
+  const handleToggleRow = (id, e) => {
     e.stopPropagation();
     if (seleccionados.includes(id)) {
       setSeleccionados(seleccionados.filter((s) => s !== id));
@@ -109,7 +102,7 @@ export const TablaAlertas: React.FC<TablaAlertasProps> = ({
   // Guardar Observaciones
   const handleGuardarObservaciones = () => {
     if (!alertaSeleccionada) return;
-    const actualizada: AlertaSistema = {
+    const actualizada = {
       ...alertaSeleccionada,
       observaciones: observacionTemp,
     };
@@ -120,10 +113,10 @@ export const TablaAlertas: React.FC<TablaAlertasProps> = ({
   };
 
   // Alternar Reconocimiento
-  const handleAlternarReconocimiento = (alerta: AlertaSistema) => {
-    const nuevoEstado: EstadoEntregaTelegram =
+  const handleAlternarReconocimiento = (alerta) => {
+    const nuevoEstado =
       alerta.estadoEntrega === 'Reconocido' ? 'No reconocido' : 'Reconocido';
-    const actualizada: AlertaSistema = {
+    const actualizada = {
       ...alerta,
       estadoEntrega: nuevoEstado,
     };
@@ -142,7 +135,7 @@ export const TablaAlertas: React.FC<TablaAlertasProps> = ({
   };
 
   // Badge de Severidad
-  const renderBadgeSeveridad = (sev: SeveridadAlerta) => {
+  const renderBadgeSeveridad = (sev) => {
     switch (sev) {
       case 'Crítico':
       case 'Alto':
@@ -156,7 +149,7 @@ export const TablaAlertas: React.FC<TablaAlertasProps> = ({
   };
 
   // Badge de Entrega Telegram
-  const renderBadgeEntrega = (estado: EstadoEntregaTelegram) => {
+  const renderBadgeEntrega = (estado) => {
     switch (estado) {
       case 'Reconocido':
         return (
@@ -312,7 +305,7 @@ export const TablaAlertas: React.FC<TablaAlertasProps> = ({
                           <input
                             type="checkbox"
                             checked={estaSeleccionada}
-                            onChange={(e) => handleToggleRow(alerta.id, e as any)}
+                            onChange={(e) => handleToggleRow(alerta.id, e)}
                           />
                           <span className="checkbox-alerta-box"></span>
                         </label>

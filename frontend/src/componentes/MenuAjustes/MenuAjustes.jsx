@@ -1,22 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Process, AlertaSistema, RolUsuario, MiembroSistema } from '../../types';
 import { getStoredMiembros, saveStoredMiembros } from '../../services/miembros';
 import './MenuAjustes.css';
 
-interface MenuAjustesProps {
-  abierto: boolean;
-  onCerrar: () => void;
-  procesos: Process[];
-  alertas: AlertaSistema[];
-  cpuTotal: string;
-  ramTotal: string;
-}
-
-type SeccionAjustes = 'perfil' | 'general' | 'roles' | 'exportar';
-
 const ELEMENTOS_POR_PAGINA_ROLES = 10;
 
-export const MenuAjustes: React.FC<MenuAjustesProps> = ({
+export const MenuAjustes = ({
   abierto,
   onCerrar,
   procesos,
@@ -24,44 +12,44 @@ export const MenuAjustes: React.FC<MenuAjustesProps> = ({
   cpuTotal,
   ramTotal,
 }) => {
-  const [seccionActiva, setSeccionActiva] = useState<SeccionAjustes>('roles');
+  const [seccionActiva, setSeccionActiva] = useState('roles');
 
   // Configuración General
   // 1. Tema Oscuro por defecto
-  const [tema, setTema] = useState<'oscuro' | 'claro'>(() => {
-    return (localStorage.getItem('sysmonitor_tema') as 'oscuro' | 'claro') || 'oscuro';
+  const [tema, setTema] = useState(() => {
+    return localStorage.getItem('sysmonitor_tema') || 'oscuro';
   });
 
   // 2. Modo No Molestar
-  const [noMolestar, setNoMolestar] = useState<boolean>(() => {
+  const [noMolestar, setNoMolestar] = useState(() => {
     const raw = localStorage.getItem('sysmonitor_no_molestar');
     return raw ? JSON.parse(raw) : false;
   });
-  const [horaInicioNoMolestar, setHoraInicioNoMolestar] = useState<string>(() => {
+  const [horaInicioNoMolestar, setHoraInicioNoMolestar] = useState(() => {
     return localStorage.getItem('sysmonitor_no_molestar_inicio') || '22:00';
   });
-  const [horaFinNoMolestar, setHoraFinNoMolestar] = useState<string>(() => {
+  const [horaFinNoMolestar, setHoraFinNoMolestar] = useState(() => {
     return localStorage.getItem('sysmonitor_no_molestar_fin') || '07:00';
   });
 
-  const [idioma, setIdioma] = useState<'es' | 'en'>('es');
+  const [idioma, setIdioma] = useState('es');
   const [refrescoAuto, setRefrescoAuto] = useState(true);
   const [notificacionesTelegram, setNotificacionesTelegram] = useState(true);
 
   // Módulo de Roles y Miembros
   // Rol del operador actual (Abril Ruiz). Permite alternar para verificar el comportamiento de permisos
-  const [rolOperadorActual, setRolOperadorActual] = useState<RolUsuario>('Administrador');
+  const [rolOperadorActual, setRolOperadorActual] = useState('Administrador');
   const esAdmin = rolOperadorActual === 'Administrador';
 
-  const [miembros, setMiembros] = useState<MiembroSistema[]>(() => getStoredMiembros());
+  const [miembros, setMiembros] = useState(() => getStoredMiembros());
   const [paginaActualRoles, setPaginaActualRoles] = useState(1);
-  const [miembrosSeleccionados, setMiembrosSeleccionados] = useState<string[]>([]);
+  const [miembrosSeleccionados, setMiembrosSeleccionados] = useState([]);
 
   // Formulario para agregar miembro
   const [mostrarModalNuevoMiembro, setMostrarModalNuevoMiembro] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [nuevoEmail, setNuevoEmail] = useState('');
-  const [nuevoRol, setNuevoRol] = useState<RolUsuario>('Operador de Guardia');
+  const [nuevoRol, setNuevoRol] = useState('Operador de Guardia');
 
   // Módulo de Exportación de Gráficos (Rango de fechas no mayor a hoy)
   const hoyStr = new Date().toISOString().split('T')[0];
@@ -69,7 +57,7 @@ export const MenuAjustes: React.FC<MenuAjustesProps> = ({
   const [fechaInicio, setFechaInicio] = useState(hace7DiasStr);
   const [fechaFin, setFechaFin] = useState(hoyStr);
   const [filtroSeveridadExport, setFiltroSeveridadExport] = useState('todas');
-  const [alertaDescarga, setAlertaDescarga] = useState<string | null>(null);
+  const [alertaDescarga, setAlertaDescarga] = useState(null);
 
   // Aplicar tema en el DOM
   useEffect(() => {
@@ -86,7 +74,7 @@ export const MenuAjustes: React.FC<MenuAjustesProps> = ({
 
   // Escuchar Escape para cerrar
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
+    const handleKey = (e) => {
       if (e.key === 'Escape' && abierto) {
         onCerrar();
       }
@@ -97,13 +85,13 @@ export const MenuAjustes: React.FC<MenuAjustesProps> = ({
 
   if (!abierto) return null;
 
-  const mostrarMensajeDescarga = (mensaje: string) => {
+  const mostrarMensajeDescarga = (mensaje) => {
     setAlertaDescarga(mensaje);
     setTimeout(() => setAlertaDescarga(null), 3000);
   };
 
   // Helper para descargar archivos en el navegador
-  const descargarBlob = (contenido: string, nombreArchivo: string, tipoMime: string) => {
+  const descargarBlob = (contenido, nombreArchivo, tipoMime) => {
     const blob = new Blob([contenido], { type: tipoMime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -132,7 +120,7 @@ ${svgXml}`;
 
   // 2. Exportar Gráficos: PNG
   const handleExportarGraficoPng = () => {
-    const svgElement = document.querySelector('.svg-poligono') as SVGElement;
+    const svgElement = document.querySelector('.svg-poligono');
     if (!svgElement) {
       mostrarMensajeDescarga('Error: No se encontró el gráfico vectorial.');
       return;
@@ -463,7 +451,7 @@ ${svgXml}`;
   };
 
   // Manejo de fechas de exportación
-  const handleCambioFechaFin = (valor: string) => {
+  const handleCambioFechaFin = (valor) => {
     if (valor > hoyStr) {
       setFechaFin(hoyStr);
     } else {
@@ -471,7 +459,7 @@ ${svgXml}`;
     }
   };
 
-  const handleCambioFechaInicio = (valor: string) => {
+  const handleCambioFechaInicio = (valor) => {
     if (valor > hoyStr) {
       setFechaInicio(hoyStr);
     } else {
@@ -514,7 +502,7 @@ ${svgXml}`;
     }
   };
 
-  const handleToggleRowMember = (id: string) => {
+  const handleToggleRowMember = (id) => {
     if (miembrosSeleccionados.includes(id)) {
       setMiembrosSeleccionados(miembrosSeleccionados.filter((s) => s !== id));
     } else {
@@ -523,7 +511,7 @@ ${svgXml}`;
   };
 
   // Cambiar rol de un miembro individual (Admin only)
-  const handleCambiarRolMiembro = (id: string, nuevoRolValor: RolUsuario) => {
+  const handleCambiarRolMiembro = (id, nuevoRolValor) => {
     if (!esAdmin) return;
     const actualizados = miembros.map((m) => (m.id === id ? { ...m, rol: nuevoRolValor } : m));
     setMiembros(actualizados);
@@ -532,7 +520,7 @@ ${svgXml}`;
   };
 
   // Cambiar rol masivo a seleccionados (Admin only)
-  const handleCambiarRolMasivo = (nuevoRolValor: RolUsuario) => {
+  const handleCambiarRolMasivo = (nuevoRolValor) => {
     if (!esAdmin || miembrosSeleccionados.length === 0) return;
     const actualizados = miembros.map((m) =>
       miembrosSeleccionados.includes(m.id) ? { ...m, rol: nuevoRolValor } : m
@@ -544,7 +532,7 @@ ${svgXml}`;
   };
 
   // Eliminar miembro individual (Admin only)
-  const handleEliminarMiembro = (id: string, nombre: string) => {
+  const handleEliminarMiembro = (id, nombre) => {
     if (!esAdmin) return;
     if (window.confirm(`¿Confirmas la baja del miembro "${nombre}" del sistema?`)) {
       const actualizados = miembros.filter((m) => m.id !== id);
@@ -568,7 +556,7 @@ ${svgXml}`;
   };
 
   // Agregar nuevo miembro (Admin only)
-  const handleCrearMiembro = (e: React.FormEvent) => {
+  const handleCrearMiembro = (e) => {
     e.preventDefault();
     if (!esAdmin) return;
     const nombreLimpio = nuevoNombre.trim();
@@ -582,7 +570,7 @@ ${svgXml}`;
       .join('')
       .toUpperCase();
 
-    const nuevo: MiembroSistema = {
+    const nuevo = {
       id: `USR-${Date.now().toString().slice(-4)}`,
       nombre: nombreLimpio,
       email: emailLimpio,
@@ -601,7 +589,7 @@ ${svgXml}`;
     mostrarMensajeDescarga(`Nuevo miembro "${nombreLimpio}" añadido con éxito.`);
   };
 
-  const renderBadgeRol = (rol: RolUsuario) => {
+  const renderBadgeRol = (rol) => {
     switch (rol) {
       case 'Administrador':
         return <span className="badge-rol rol-admin">Administrador</span>;
@@ -689,7 +677,7 @@ ${svgXml}`;
                   <select
                     value={rolOperadorActual}
                     onChange={(e) => {
-                      const nuevo = e.target.value as RolUsuario;
+                      const nuevo = e.target.value;
                       setRolOperadorActual(nuevo);
                       setMiembrosSeleccionados([]);
                       mostrarMensajeDescarga(`Modo de vista cambiado a: ${nuevo}`);
@@ -755,7 +743,7 @@ ${svgXml}`;
                     />
                     <select
                       value={nuevoRol}
-                      onChange={(e) => setNuevoRol(e.target.value as RolUsuario)}
+                      onChange={(e) => setNuevoRol(e.target.value)}
                       className="input-miembro select-rol-nuevo"
                     >
                       <option value="Administrador">Administrador</option>
@@ -790,7 +778,7 @@ ${svgXml}`;
                     <select
                       onChange={(e) => {
                         if (e.target.value) {
-                          handleCambiarRolMasivo(e.target.value as RolUsuario);
+                          handleCambiarRolMasivo(e.target.value);
                           e.target.value = '';
                         }
                       }}
@@ -899,7 +887,7 @@ ${svgXml}`;
                                 <select
                                   value={m.rol}
                                   onChange={(e) =>
-                                    handleCambiarRolMiembro(m.id, e.target.value as RolUsuario)
+                                    handleCambiarRolMiembro(m.id, e.target.value)
                                   }
                                   className="select-rol-en-tabla"
                                   title="Haz clic para modificar el rol de este miembro"
@@ -1063,7 +1051,7 @@ ${svgXml}`;
                 </div>
                 <select
                   value={idioma}
-                  onChange={(e) => setIdioma(e.target.value as any)}
+                  onChange={(e) => setIdioma(e.target.value)}
                   className="select-idioma"
                 >
                   <option value="es">Español (ES)</option>

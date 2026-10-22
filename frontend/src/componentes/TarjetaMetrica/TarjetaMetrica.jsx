@@ -1,7 +1,7 @@
+import React from 'react';
 import './TarjetaMetrica.css';
-//Uso para medir cpu, ram y procesos totales. Después vemos si podemos usarlo en otras cosas
 
-export function TarjetaMetrica({ title, value, unit, subtitle }) {
+export const TarjetaMetrica = ({ title, value, unit, subtitle }) => {
   return (
     <div className="metric-card">
       <span className="metric-title">{title}</span>
@@ -12,4 +12,4 @@ export function TarjetaMetrica({ title, value, unit, subtitle }) {
       {subtitle && <span className="metric-subtitle">{subtitle}</span>}
     </div>
   );
-}
+};

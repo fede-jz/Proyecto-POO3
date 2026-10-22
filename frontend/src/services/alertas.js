@@ -1,8 +1,6 @@
-import { AlertaSistema } from '../types';
-
 const STORAGE_KEY_ALERTAS = 'monitoreo_alertas_sistema';
 
-const ALERTAS_INICIALES: AlertaSistema[] = [
+const ALERTAS_INICIALES = [
   {
     id: 'ALT-9841',
     procesoId: 'PID-2980',
@@ -148,7 +146,7 @@ Contenedores en ejecución consumiendo buffer cache.`,
   },
 ];
 
-export function getStoredAlertas(): AlertaSistema[] {
+export function getStoredAlertas() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_ALERTAS);
     if (raw) {
@@ -160,7 +158,7 @@ export function getStoredAlertas(): AlertaSistema[] {
   return ALERTAS_INICIALES;
 }
 
-export function saveStoredAlertas(alertas: AlertaSistema[]): void {
+export function saveStoredAlertas(alertas) {
   try {
     localStorage.setItem(STORAGE_KEY_ALERTAS, JSON.stringify(alertas));
   } catch {

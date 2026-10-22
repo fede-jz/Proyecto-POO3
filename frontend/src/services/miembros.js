@@ -1,8 +1,6 @@
-import { MiembroSistema } from '../types';
-
 const STORAGE_KEY_MIEMBROS = 'monitoreo_miembros_sistema';
 
-const MIEMBROS_INICIALES: MiembroSistema[] = [
+const MIEMBROS_INICIALES = [
   {
     id: 'USR-01',
     nombre: 'Abril Ruiz',
@@ -133,7 +131,7 @@ const MIEMBROS_INICIALES: MiembroSistema[] = [
   },
 ];
 
-export function getStoredMiembros(): MiembroSistema[] {
+export function getStoredMiembros() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_MIEMBROS);
     if (raw) {
@@ -145,7 +143,7 @@ export function getStoredMiembros(): MiembroSistema[] {
   return MIEMBROS_INICIALES;
 }
 
-export function saveStoredMiembros(miembros: MiembroSistema[]): void {
+export function saveStoredMiembros(miembros) {
   try {
     localStorage.setItem(STORAGE_KEY_MIEMBROS, JSON.stringify(miembros));
   } catch {
