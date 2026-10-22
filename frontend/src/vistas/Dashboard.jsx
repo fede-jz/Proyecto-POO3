@@ -274,6 +274,7 @@ export function Dashboard({ usuario, onCerrarSesion }) {
         alertas={alertas}
         cpuTotal={cpuTotal}
         ramTotal={ramTotal}
+        usuario={usuario} // <--- AÑADI ESTA PROPIEDAD PARA PASAR EL USUARIO AL COMPONENTE MenuAjustes
       />
     </div>
   );

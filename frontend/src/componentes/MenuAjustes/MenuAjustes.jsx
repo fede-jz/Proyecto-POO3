@@ -11,6 +11,7 @@ export const MenuAjustes = ({
   alertas,
   cpuTotal,
   ramTotal,
+  usuario, // <--- Recibir la prop usuario aquí DESDE EL DASHBOARD
 }) => {
   const [seccionActiva, setSeccionActiva] = useState('roles');
 
@@ -563,6 +564,8 @@ ${svgXml}`;
     const emailLimpio = nuevoEmail.trim();
     if (!nombreLimpio || !emailLimpio) return;
 
+    // Aquí podrías agregar lógica para verificar si el usuario existe en tu BD principal de Supabase
+    
     const iniciales = nombreLimpio
       .split(' ')
       .map((n) => n[0])
@@ -575,18 +578,21 @@ ${svgXml}`;
       nombre: nombreLimpio,
       email: emailLimpio,
       rol: nuevoRol,
-      ultimaConexion: 'Recién registrado',
+      ultimaConexion: 'Pendiente de aceptación',
       avatarIniciales: iniciales || 'US',
     };
 
     const actualizados = [nuevo, ...miembros];
     setMiembros(actualizados);
     saveStoredMiembros(actualizados);
+    
+    // Simulación de envío de invitación por Telegram
+    mostrarMensajeDescarga(`Invitación enviada vía Telegram a ${nombreLimpio}.`);
+    
     setNuevoNombre('');
     setNuevoEmail('');
     setNuevoRol('Operador de Guardia');
     setMostrarModalNuevoMiembro(false);
-    mostrarMensajeDescarga(`Nuevo miembro "${nombreLimpio}" añadido con éxito.`);
   };
 
   const renderBadgeRol = (rol) => {
@@ -1223,39 +1229,42 @@ ${svgXml}`;
           )}
 
           {/* =========================================
-              SECCIÓN: PERFIL DEL OPERADOR
+              SECCIÓN: PERFIL DEL OPERADOR <-- configurado junto al dashboard.jsx y miembros.js
               ========================================= */}
+
           {seccionActiva === 'perfil' && (
             <div className="seccion-perfil-container">
               <div className="tarjeta-avatar-usuario">
-                <div className="avatar-circulo">AR</div>
+                <div className="avatar-circulo">
+                  {usuario?.nombre ? usuario.nombre.substring(0, 2).toUpperCase() : 'US'}
+                </div>
                 <div className="usuario-datos-texto">
-                  <h4>Abril Ruiz</h4>
+                  <h4>{usuario?.nombre || 'Operador'}</h4>
                   <span className="badge-rol-admin">{rolOperadorActual}</span>
-                  <span className="usuario-email">abrilruizblagine2019@gmail.com</span>
+                  <span className="usuario-email">{usuario?.email || 'correo@ejemplo.com'}</span>
                 </div>
               </div>
 
               <div className="card-detalle-perfil">
                 <div className="fila-perfil">
-                  <span className="label-perfil">ID de Operador:</span>
-                  <span className="val-perfil font-mono">USR-8419-SEC</span>
+                  <span className="label-perfil">ID de Operador (UUID):</span>
+                  <span className="val-perfil font-mono">{usuario?.id || 'N/A'}</span>
                 </div>
                 <div className="fila-perfil">
-                  <span className="label-perfil">Último Acceso:</span>
-                  <span className="val-perfil font-mono">2026-10-21 09:30:15 UTC</span>
+                  <span className="label-perfil">Fecha de Registro:</span>
+                  <span className="val-perfil font-mono">
+                    {usuario?.creado_en ? new Date(usuario.creado_en).toLocaleString() : 'N/A'}
+                  </span>
                 </div>
                 <div className="fila-perfil">
                   <span className="label-perfil">Sesión Activa:</span>
-                  <span className="val-perfil verde-online">En línea (Autenticado)</span>
-                </div>
-                <div className="fila-perfil">
-                  <span className="label-perfil">Telegram Bot:</span>
-                  <span className="val-perfil font-mono">@SysMonitorAlertBot</span>
+                  <span className="val-perfil verde-online">En línea (Supabase Cloud)</span>
                 </div>
                 <div className="fila-perfil">
                   <span className="label-perfil">Telegram Chat ID:</span>
-                  <span className="val-perfil font-mono">782828437</span>
+                  <span className="val-perfil font-mono">
+                    {usuario?.telegram_chat_id ? usuario.telegram_chat_id : 'No vinculado'}
+                  </span>
                 </div>
               </div>
             </div>
