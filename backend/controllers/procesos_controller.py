@@ -202,8 +202,11 @@ def verificar_y_actualizar_proceso_cli(nombre: str = None):
                     # Registrar nuevas métricas en historial
                     cur.execute(
                         "INSERT INTO historial (proceso_id, ram_porcentaje, cpu_porcentaje) VALUES (%s, %s, %s)",
-                        (proceso_id, proceso_sistema["memory_percent"], proceso_sistema["cpu_percent"])
-                    )
+                        (proceso_id, proceso_sistema["memory_percent"], proceso_sistema["cpu_percent"]))
+
+                    # ---> AÑADIR LLAMADA A LA EVALUACIÓN DE ALERTAS AQUÍ <---
+                    evaluar_y_disparar_alertas(conn, proceso_id, proceso_sistema["cpu_percent"], proceso_sistema["memory_percent"])
+
                     conn.commit()
                     print(f"-> Métricas registradas: CPU {proceso_sistema['cpu_percent']}% | RAM {proceso_sistema['memory_percent']}% (PIDs: {proceso_sistema['pids']})")
                     return db_proceso
@@ -252,3 +255,49 @@ def eliminar_proceso_db_cli(nombre: str = None):
             else:
                 print("\nOperación cancelada. El proceso no fue eliminado.")
                 return False
+
+#--------------------ALERTAS AUTOMÁTICAS-------------------------
+
+def evaluar_y_disparar_alertas(conn, proceso_id: UUID, cpu_actual: float, ram_actual: float):
+    """
+    Evalúa las métricas actuales del proceso frente a los umbrales configurados 
+    en la tabla 'alertas' y registra un 'evento' si se supera el límite.
+    """
+    with conn.cursor() as cur:
+        # Buscar todas las alertas activas asociadas a este proceso a través de usuarios_procesos
+        cur.execute(
+            """
+            SELECT a.id, a.tipo, a.valor_limite, u.telegram_chat_id
+            FROM alertas a
+            JOIN usuarios_procesos up ON a.usuario_proceso_id = up.id
+            JOIN usuarios u ON up.usuario_id = u.id
+            WHERE up.proceso_id = %s AND a.activo = TRUE
+            """,
+            (proceso_id,)
+        )
+        alertas_configuradas = cur.fetchall()
+
+        for alerta in alertas_configuradas:
+            tipo = alerta["tipo"]
+            limite = alerta["valor_limite"]
+            valor_detectado = None
+
+            if tipo == "cpu" and cpu_actual > limite:
+                valor_detectado = cpu_actual
+            elif tipo == "ram" and ram_actual > limite:
+                valor_detectado = ram_actual
+
+            # Si se superó el límite, registramos el evento en la BD
+            if valor_detectado is not None:
+                cur.execute(
+                    """
+                    INSERT INTO eventos (alerta_id, tipo_evento, valor_detectado, notificado)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING id
+                    """,
+                    (alerta["id"], f"exceso_{tipo}", valor_detectado, False)
+                )
+                evento_creado = cur.fetchone()
+                
+                # Opcional: Aquí podrías disparar el envío del mensaje a Telegram usando alerta["telegram_chat_id"]
+                print(f"[ALERTA AUTOMÁTICA] ¡Umbral de {tipo.upper()} superado! Límite: {limite}%, Detectado: {valor_detectado}%. Evento ID: {evento_creado['id']}")
