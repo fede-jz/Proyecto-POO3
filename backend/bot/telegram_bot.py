@@ -44,12 +44,15 @@ async def vincular_comando(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     (chat_id, usuario["id"])
                 )
                 conn.commit()
+                
+                # --- MENSAJE PERSONALIZADO ---
                 await update.message.reply_text(
-                    f"✅ ¡Hola {usuario['nombre']}! Tu cuenta de SysMonitor ha sido vinculada exitosamente."
+                    f"✅ ¡Excelente, {usuario['nombre']}! Tus datos han sido almacenados con éxito en la base de datos. "
+                    f"A partir de ahora, las alertas críticas de SysMonitor llegarán directamente a este chat."
                 )
             else:
                 await update.message.reply_text(
-                    "❌ El código es inválido o ya ha expirado. Generá uno nuevo desde los ajustes de la web."
+                    "❌ El código es inválido o ya ha expirado. Por favor, generá uno nuevo desde los ajustes de la plataforma web."
                 )
 
 if __name__ == "__main__":
