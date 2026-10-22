@@ -468,6 +468,32 @@ ${svgXml}`;
     }
   };
 
+  //==========================================
+  // GESTIÓN DEL BOT TELEGRAM
+  //==========================================
+
+  const [codigoTelegram, setCodigoTelegram] = useState(null);
+  const [cargandoCodigo, setCargandoCodigo] = useState(false);
+
+  const handleSolicitarCodigoTelegram = async () => {
+    setCargandoCodigo(true);
+    try {
+      const respuesta = await fetch(`http://localhost:8000/auth/telegram/generar-codigo?usuario_id=${usuario.id}`, {
+        method: "POST"
+      });
+      const data = await respuesta.json();
+      if (respuesta.ok) {
+        setCodigoTelegram(data.codigo);
+      } else {
+        alert(data.detail || "Error al generar el código");
+      }
+    } catch (err) {
+      alert("Error de red al conectar con el servidor.");
+    } finally {
+      setCargandoCodigo(false);
+    }
+  };
+
   // =========================================
   // GESTIÓN DE MIEMBROS Y ROLES (ADMIN ONLY)
   // =========================================
@@ -1229,7 +1255,9 @@ ${svgXml}`;
           )}
 
           {/* =========================================
-              SECCIÓN: PERFIL DEL OPERADOR <-- configurado junto al dashboard.jsx y miembros.js
+              SECCIÓN: PERFIL DEL OPERADOR
+              configurado v1: junto al dashboard.jsx y miembros.js
+              configurado v2: junto a auth_controller.py y auth_router.py para el bot de telegram
               ========================================= */}
 
           {seccionActiva === 'perfil' && (
@@ -1257,15 +1285,43 @@ ${svgXml}`;
                   </span>
                 </div>
                 <div className="fila-perfil">
-                  <span className="label-perfil">Sesión Activa:</span>
-                  <span className="val-perfil verde-online">En línea (Supabase Cloud)</span>
-                </div>
-                <div className="fila-perfil">
-                  <span className="label-perfil">Telegram Chat ID:</span>
-                  <span className="val-perfil font-mono">
-                    {usuario?.telegram_chat_id ? usuario.telegram_chat_id : 'No vinculado'}
+                  <span className="label-perfil">Estado de Telegram:</span>
+                  <span className={`val-perfil ${usuario?.telegram_chat_id ? 'verde-online' : 'advertencia'}`}>
+                    {usuario?.telegram_chat_id ? `Vinculado (ID: ${usuario.telegram_chat_id})` : 'No vinculado'}
                   </span>
                 </div>
+
+                {/* Sección interactiva para vincular Telegram */}
+                {!usuario?.telegram_chat_id && (
+                  <div className="vinculacion-telegram-box" style={{ marginTop: '1rem', padding: '1rem', background: '#0f172a', borderRadius: '6px' }}>
+                    <p style={{ fontSize: '0.85rem', marginBottom: '0.75rem', color: '#cbd5e1' }}>
+                      Conectá tu cuenta para recibir alertas críticas automáticas directo en tu teléfono.
+                    </p>
+                    
+                    {!codigoTelegram ? (
+                      <button 
+                        type="button" 
+                        onClick={handleSolicitarCodigoTelegram}
+                        disabled={cargandoCodigo}
+                        className="btn-formato btn-pdf"
+                      >
+                        {cargandoCodigo ? 'Generando...' : '🔗 Vincular con Telegram'}
+                      </button>
+                    ) : (
+                      <div className="instrucciones-vinculacion">
+                        <p style={{ fontSize: '0.8rem', color: '#38bdf8', marginBottom: '0.5rem' }}>
+                          1. Abrí tu bot en Telegram: <a href="https://t.me/SysMonitorAlertBot" target="_blank" rel="noreferrer" style={{ color: '#fff', textDecoration: 'underline' }}>@SysMonitorAlertBot</a>
+                        </p>
+                        <p style={{ fontSize: '0.8rem', color: '#38bdf8' }}>
+                          2. Enviále este comando exacto:
+                        </p>
+                        <div className="font-mono" style={{ background: '#1e293b', padding: '0.5rem', borderRadius: '4px', marginTop: '0.25rem', userSelect: 'all', color: '#4ade80' }}>
+                          /vincular {codigoTelegram}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

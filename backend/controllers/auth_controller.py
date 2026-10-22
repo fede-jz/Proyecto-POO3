@@ -1,5 +1,7 @@
 import hashlib
 import html
+import random 
+from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
 
@@ -133,6 +135,31 @@ class auth_controller:
                           v in usuario.items() if k != "contrasenia_hash"}
         return usuario_seguro
 
+
+    @classmethod
+    def generar_codigo_telegram(cls, usuario_id: str) -> dict:
+        _asegurar_pool_abierto()
+        codigo = f"SYS-{random.randint(1000, 9999)}"
+        expira_en = datetime.utcnow() + timedelta(minutes=10)
+        
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    UPDATE usuarios 
+                    SET telegram_cod = %s, telegram_cod_expira_en = %s 
+                    WHERE id = %s
+                    RETURNING id, email
+                    """,
+                    (codigo, expira_en, usuario_id)
+                )
+                resultado = cur.fetchone()
+                conn.commit()
+                
+                if not resultado:
+                    raise HTTPException(status_code=404, detail="Usuario no encontrado")
+                    
+        return {"success": True, "codigo": codigo, "expira_en": "10 minutos"}
 
 # Alias bajo convención CamelCase
 AuthController = auth_controller

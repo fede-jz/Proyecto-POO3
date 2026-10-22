@@ -13,3 +13,7 @@ def registrar_usuario(data: usuario_schema.UsuarioCreate):
 @router.post("/login", response_model=usuario_schema.UsuarioOut, status_code=status.HTTP_200_OK)
 def iniciar_sesion(data: usuario_schema.UsuarioLogin):
     return auth_controller.iniciar_sesion(data)
+
+@router.post("/telegram/generar-codigo")
+def generar_codigo_telegram(usuario_id: str):
+    return auth_controller.generar_codigo_telegram(usuario_id)
