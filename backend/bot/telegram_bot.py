@@ -1,4 +1,5 @@
 #para encenterlo en una tercera terminal ejecutás: python telegram_bot.py
+#se debe instalar la librería oficial de Telegram para Python: pip install python-telegram-bot --upgrade
 import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
@@ -8,7 +9,9 @@ from psycopg.rows import dict_row
 
 load_dotenv()
 DATABASE_URL = os.environ["DATABASE_URL"]
-TELEGRAM_BOT_TOKEN = "TU_TOKEN_DE_BOTFATHER_AQUI" # Reemplazá esto con el token que te da Telegram
+TELEGRAM_BOT_TOKEN = "8892571069:AAFgg7yRRNOtaghlZ-GNk6zPLGUwlU-p_hI" 
+#Nombre del BOT: SysMonitor Alert
+#username del BOT: @sysmonitoralert_bot
 
 async def vincular_comando(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id

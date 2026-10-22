@@ -60,6 +60,32 @@ export const MenuAjustes = ({
   const [filtroSeveridadExport, setFiltroSeveridadExport] = useState('todas');
   const [alertaDescarga, setAlertaDescarga] = useState(null);
 
+  //==========================================
+  // GESTIÓN DEL BOT TELEGRAM
+  //==========================================
+
+  const [codigoTelegram, setCodigoTelegram] = useState(null);
+  const [cargandoCodigo, setCargandoCodigo] = useState(false);
+
+  const handleSolicitarCodigoTelegram = async () => {
+    setCargandoCodigo(true);
+    try {
+      const respuesta = await fetch(`http://localhost:8000/auth/telegram/generar-codigo?usuario_id=${usuario.id}`, {
+        method: "POST"
+      });
+      const data = await respuesta.json();
+      if (respuesta.ok) {
+        setCodigoTelegram(data.codigo);
+      } else {
+        alert(data.detail || "Error al generar el código");
+      }
+    } catch (err) {
+      alert("Error de red al conectar con el servidor.");
+    } finally {
+      setCargandoCodigo(false);
+    }
+  };
+
   // Aplicar tema en el DOM
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', tema);
@@ -465,32 +491,6 @@ ${svgXml}`;
       setFechaInicio(hoyStr);
     } else {
       setFechaInicio(valor);
-    }
-  };
-
-  //==========================================
-  // GESTIÓN DEL BOT TELEGRAM
-  //==========================================
-
-  const [codigoTelegram, setCodigoTelegram] = useState(null);
-  const [cargandoCodigo, setCargandoCodigo] = useState(false);
-
-  const handleSolicitarCodigoTelegram = async () => {
-    setCargandoCodigo(true);
-    try {
-      const respuesta = await fetch(`http://localhost:8000/auth/telegram/generar-codigo?usuario_id=${usuario.id}`, {
-        method: "POST"
-      });
-      const data = await respuesta.json();
-      if (respuesta.ok) {
-        setCodigoTelegram(data.codigo);
-      } else {
-        alert(data.detail || "Error al generar el código");
-      }
-    } catch (err) {
-      alert("Error de red al conectar con el servidor.");
-    } finally {
-      setCargandoCodigo(false);
     }
   };
 
