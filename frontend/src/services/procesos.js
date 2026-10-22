@@ -81,7 +81,7 @@ export async function obtenerProcesosSistema() {
   const tagsMap = getStoredTags();
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1200);
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     const response = await fetch(`${API_URL}/procesos/sistema`, { signal: controller.signal });
     clearTimeout(timeoutId);
     if (response.ok) {
