@@ -1,7 +1,7 @@
 import requests
 
 def enviar_alerta_telegram(chat_id: int, mensaje: str):
-    TOKEN = "TU_TOKEN_DE_BOTFATHER_AQUI"
+    TOKEN = "8892571069:AAFgg7yRRNOtaghlZ-GNk6zPLGUwlU-p_hI"
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {
         "chat_id": chat_id,

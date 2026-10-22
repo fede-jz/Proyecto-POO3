@@ -1310,7 +1310,7 @@ ${svgXml}`;
                     ) : (
                       <div className="instrucciones-vinculacion">
                         <p style={{ fontSize: '0.8rem', color: '#38bdf8', marginBottom: '0.5rem' }}>
-                          1. Abrí tu bot en Telegram: <a href="https://t.me/SysMonitorAlertBot" target="_blank" rel="noreferrer" style={{ color: '#fff', textDecoration: 'underline' }}>@SysMonitorAlertBot</a>
+                          1. Abrí tu bot en Telegram: <a href="https://t.me/SysMonitorAlertBot" target="_blank" rel="noreferrer" style={{ color: '#fff', textDecoration: 'underline' }}>@sysmonitoralert_bot</a>
                         </p>
                         <p style={{ fontSize: '0.8rem', color: '#38bdf8' }}>
                           2. Enviále este comando exacto:

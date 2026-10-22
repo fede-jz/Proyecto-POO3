@@ -8,7 +8,7 @@ import psycopg
 from psycopg.rows import dict_row
 
 load_dotenv()
-DATABASE_URL = os.environ["DATABASE_URL"]
+DATABASE_URL = os.environ["postgresql://postgres.dxqifvyeunehbxvhilcj:sist_monitoreo_web@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require"]
 TELEGRAM_BOT_TOKEN = "8892571069:AAFgg7yRRNOtaghlZ-GNk6zPLGUwlU-p_hI" 
 #Nombre del BOT: SysMonitor Alert
 #username del BOT: @sysmonitoralert_bot
