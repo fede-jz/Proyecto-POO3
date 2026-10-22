@@ -3,16 +3,19 @@ from db import pool
 from controllers import procesos_controller
 from routers import procesos_router, auth_router
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware # <--- AÑADIR ESTO PARA CONFIGURACIÓN DE CORS
+# <--- AÑADIR ESTO PARA CONFIGURACIÓN DE CORS
+from fastapi.middleware.cors import CORSMiddleware
 
-#-----------API----------------
+# -----------API----------------
 # Ciclo de vida (Lifespan) de FastAPI, inicializa y cierra el pool de conexiones al iniciar y apagar la aplicación
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     pool.open(wait=True)
     try:
         yield
-    finally: 
+    finally:
         pool.close()
 
 app = FastAPI(lifespan=lifespan)
@@ -20,18 +23,20 @@ app = FastAPI(lifespan=lifespan)
 # --- AÑADIR CONFIGURACIÓN DE CORS ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción puedes acotarlo al dominio de tu frontend
+    # En producción puedes acotarlo al dominio de tu frontend
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 # ------------------------------------
 
-app.include_router(procesos_router.router, prefix="/procesos", tags=["Procesos"])
+app.include_router(procesos_router.router,
+                   prefix="/procesos", tags=["Procesos"])
 app.include_router(auth_router.router, prefix="/auth", tags=["Autenticación"])
 
 
-#----------CLI DE PRUEBA--------
+# ----------CLI DE PRUEBA--------
 def mostrar_tabla_procesos(procesos):
     """Muestra una lista de procesos agrupados con formato de tabla."""
     print(f"\n{'NOMBRE':<35} | {'PIDs':<20} | {'CPU (%)':<8} | {'RAM (%)':<8}")
@@ -40,9 +45,11 @@ def mostrar_tabla_procesos(procesos):
         pids_str = ", ".join(map(str, p["pids"]))
         if len(pids_str) > 18:
             pids_str = pids_str[:15] + "..."
-        print(f"{p['name']:<35} | {pids_str:<20} | {p['cpu_percent']:<8.2f} | {p['memory_percent']:<8.2f}")
+        print(
+            f"{p['name']:<35} | {pids_str:<20} | {p['cpu_percent']:<8.2f} | {p['memory_percent']:<8.2f}")
     print("-" * 80)
     print(f"Total de procesos agrupados: {len(procesos)}\n")
+
 
 def menu():
     """Menú interactivo por consola para probar el monitoreo de procesos."""
@@ -68,7 +75,8 @@ def menu():
             mostrar_tabla_procesos(agrupados)
 
         elif opcion == "2":
-            nombre = input("\nIngrese el nombre del proceso a buscar (ej. explorer.exe): ").strip()
+            nombre = input(
+                "\nIngrese el nombre del proceso a buscar (ej. explorer.exe): ").strip()
             if not nombre:
                 print("Nombre no válido.")
                 continue
@@ -81,7 +89,8 @@ def menu():
                 print(f"  CPU:    {encontrado['cpu_percent']}%")
                 print(f"  RAM:    {encontrado['memory_percent']}%")
             else:
-                print(f"\n[NO ENCONTRADO] El proceso '{nombre}' no está ejecutándose en el sistema.")
+                print(
+                    f"\n[NO ENCONTRADO] El proceso '{nombre}' no está ejecutándose en el sistema.")
 
         elif opcion == "3":
             procesos_controller.verificar_y_actualizar_proceso_cli()
@@ -108,8 +117,10 @@ def menu():
         else:
             print("\nOpción no válida. Por favor ingrese un número del 0 al 5.")
 
+
 def main():
     menu()
+
 
 if __name__ == "__main__":
     main()

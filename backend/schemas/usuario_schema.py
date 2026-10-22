@@ -6,10 +6,12 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class UsuarioCreate(BaseModel):
-    email: str = Field(..., min_length=5, max_length=255, description="Correo electrónico del usuario")
-    contrasenia: str = Field(..., min_length=4, max_length=255, description="Contraseña en texto plano")
-    nombre: str = Field(..., min_length=1, max_length=100, description="Nombre completo o alias del usuario")
-    telegram_chat_id: Optional[int] = Field(default=None, description="ID de chat de Telegram opcional")
+    email: str = Field(..., min_length=5, max_length=255,
+                       description="Correo electrónico del usuario")
+    contrasenia: str = Field(..., min_length=4, max_length=255,
+                             description="Contraseña en texto plano")
+    nombre: str = Field(..., min_length=1, max_length=100,
+                        description="Nombre completo o alias del usuario")
 
     @field_validator("email")
     @classmethod
@@ -22,8 +24,10 @@ class UsuarioCreate(BaseModel):
 
 
 class UsuarioLogin(BaseModel):
-    email: str = Field(..., min_length=5, max_length=255, description="Correo electrónico del usuario")
-    contrasenia: str = Field(..., min_length=1, max_length=255, description="Contraseña del usuario")
+    email: str = Field(..., min_length=5, max_length=255,
+                       description="Correo electrónico del usuario")
+    contrasenia: str = Field(..., min_length=1, max_length=255,
+                             description="Contraseña del usuario")
 
     @field_validator("email")
     @classmethod
@@ -39,5 +43,4 @@ class UsuarioOut(BaseModel):
     id: UUID
     email: str
     nombre: str
-    telegram_chat_id: Optional[int] = None
     creado_en: datetime

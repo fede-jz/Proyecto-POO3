@@ -1,0 +1,21 @@
+.pm-register-card {
+  width: min(100%, 438px);
+}
+
+.pm-register-card .pm-auth-card__heading {
+  margin-bottom: 22px;
+}
+
+.pm-register-card .pm-form {
+  gap: 15px;
+}
+
+.pm-register-card .pm-auth-card__switch {
+  margin-top: 23px;
+}
+
+@media (max-width: 520px) {
+  .pm-register-card .pm-auth-card__heading h2 {
+    font-size: 1.5rem;
+  }
+}

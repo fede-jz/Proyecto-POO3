@@ -2,17 +2,17 @@ from typing import Optional
 from uuid import UUID
 
 
-def crear(conn, email: str, contrasenia_hash: str, nombre: str, telegram_chat_id: Optional[int] = None):
+def crear(conn, email: str, contrasenia_hash: str, nombre: str):
     """
     Inserta un nuevo usuario en la base de datos de manera segura mediante parámetros SQL (%s).
     """
     return conn.execute(
         """
-        INSERT INTO usuarios (email, contrasenia_hash, nombre, telegram_chat_id)
-        VALUES (%s, %s, %s, %s)
-        RETURNING id, email, nombre, telegram_chat_id, creado_en
+        INSERT INTO usuarios (email, contrasenia_hash, nombre)
+        VALUES (%s, %s, %s)
+        RETURNING id, email, nombre, creado_en
         """,
-        (email, contrasenia_hash, nombre, telegram_chat_id)
+        (email, contrasenia_hash, nombre)
     ).fetchone()
 
 
@@ -22,7 +22,7 @@ def buscar_por_email(conn, email: str):
     """
     return conn.execute(
         """
-        SELECT id, email, contrasenia_hash, nombre, telegram_chat_id, creado_en
+        SELECT id, email, contrasenia_hash, nombre, creado_en
         FROM usuarios
         WHERE LOWER(email) = LOWER(%s)
         """,
@@ -36,7 +36,7 @@ def buscar_por_id(conn, usuario_id: UUID):
     """
     return conn.execute(
         """
-        SELECT id, email, contrasenia_hash, nombre, telegram_chat_id, creado_en
+        SELECT id, email, contrasenia_hash, nombre, creado_en
         FROM usuarios
         WHERE id = %s
         """,
@@ -50,7 +50,7 @@ def listar(conn):
     """
     return conn.execute(
         """
-        SELECT id, email, nombre, telegram_chat_id, creado_en
+        SELECT id, email, nombre, creado_en
         FROM usuarios
         ORDER BY creado_en DESC
         """
