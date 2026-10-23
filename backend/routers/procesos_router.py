@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from controllers import procesos_controller
 from uuid import UUID
 from schemas import proceso_schema
@@ -6,8 +6,8 @@ from schemas import proceso_schema
 router = APIRouter()
 
 @router.get("/sistema")
-def listar_procesos_sistema():
-    return procesos_controller._agrupar_procesos_por_nombre(procesos_controller.listar_procesos_sistema())
+def listar_procesos_sistema(request: Request):
+    return request.app.state.procesos_cache
 
 @router.get("/", response_model=list[proceso_schema.ProcesoOut])
 def listar_procesos_bd():
