@@ -1,3 +1,5 @@
+import asyncio
+from fastapi import FastAPI
 import time
 import psutil
 from repositories import procesos_repositorio
@@ -7,6 +9,12 @@ try:
     from db import pool
 except ImportError:
     from backend.db import pool
+
+async def guardar_procesos_en_cache(app: FastAPI):
+    print("Worker iniciado")
+    while True:
+        app.state.procesos_cache = _agrupar_procesos_por_nombre(listar_procesos_sistema())
+        await asyncio.sleep(5)
 
 def listar_procesos_sistema():
     # La primera medición de CPU siempre da 0, entonces se hace una medición inicial para despues tener el valor correcto

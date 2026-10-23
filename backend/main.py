@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from db import pool
 from controllers import procesos_controller
@@ -9,10 +10,15 @@ from fastapi import FastAPI
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     pool.open(wait=True)
+    app.state.procesos_cache = []
+    worker_task = asyncio.create_task(procesos_controller.guardar_procesos_en_cache(app))
     try:
         yield
     finally: 
+        # Al apagar el servidor cerramos la pool y cancelamos la tarea del worker
         pool.close()
+        worker_task.cancel()
+        await asyncio.gather(worker_task, return_exceptions=True)
 
 app = FastAPI(lifespan=lifespan)
 
