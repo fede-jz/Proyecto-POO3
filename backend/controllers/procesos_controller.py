@@ -2,11 +2,7 @@ import time
 import psutil
 from repositories import procesos_repositorio
 from uuid import UUID
-
-try:
-    from db import pool
-except ImportError:
-    from backend.db import pool
+from db import pool
 
 def _agrupar_procesos_por_nombre(procesos):
     # Agrupa los procesos que tengan el mismo nombre y suma sus valores de CPU y memoria
@@ -66,11 +62,6 @@ def buscar_proceso_en_sistema(nombre: str):
             return proc
     return None
 
-def _asegurar_pool_abierto():
-    """Abre el pool de conexiones si aún no fue abierto."""
-    if not getattr(pool, '_opened', False):
-        pool.open()
-
 #------------ENDPOINTS----------------
 
 def crear_proceso_db(nombre: str, estado: str = "desconocido") -> dict:
@@ -89,9 +80,6 @@ def obtener_procesos_db() -> list[dict]:
     """
     Obtiene la lista de procesos registrados en la base de datos.
     """
-    # Dejo asegurar pool abierto porque está funcion se llama desde el CLI, en caso de eliminar CLI borrar función
-    # Las demás funciones al utilizarlas solamente fastapi ya se asegura que el pool esté abierto con el lifespan
-    _asegurar_pool_abierto()
     with pool.connection() as conn:
         return procesos_repositorio.listar(conn)
 
