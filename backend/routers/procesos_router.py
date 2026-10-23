@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from controllers import procesos_controller
 from controllers.auth_controller import auth_controller
 from uuid import UUID
@@ -12,8 +12,8 @@ def get_current_user_from_token():
 
 
 @router.get("/sistema")
-def listar_procesos_sistema(current_user: dict = Depends(auth_controller.get_current_user_dependency)):
-    return procesos_controller._agrupar_procesos_por_nombre(procesos_controller.listar_procesos_sistema())
+def listar_procesos_sistema(request: Request, current_user: dict = Depends(auth_controller.get_current_user_dependency)):
+    return request.app.state.procesos_cache
 
 
 @router.get("/", response_model=list[proceso_schema.ProcesoOut])

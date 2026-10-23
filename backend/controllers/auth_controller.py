@@ -1,32 +1,21 @@
 import hashlib
 import html
 import os
+import jwt
 from datetime import datetime, timedelta, timezone
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import Depends, HTTPException, status
 from typing import Optional
 from uuid import UUID
-
-import jwt
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-
-try:
-    from db import pool
-except ImportError:
-    from backend.db import pool
-
+from db import pool
 from repositories import usuarios_repositorio
 from schemas.usuario_schema import UsuarioCreate, UsuarioLogin
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "monitoreo-secret-key")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
+
 security = HTTPBearer()
-
-
-def _asegurar_pool_abierto():
-    """Abre el pool de conexiones si aún no fue abierto."""
-    if not getattr(pool, "_opened", False):
-        pool.open()
 
 
 class auth_controller:
@@ -60,7 +49,6 @@ class auth_controller:
         """
         Busca y retorna un usuario de la base de datos por su email.
         """
-        _asegurar_pool_abierto()
         email_limpio = cls.escapar_caracteres(email).lower()
         with pool.connection() as conn:
             return usuarios_repositorio.buscar_por_email(conn, email_limpio)
@@ -84,7 +72,6 @@ class auth_controller:
         3. Hashea la contraseña.
         4. Almacena el usuario de forma segura con consultas parametrizadas.
         """
-        _asegurar_pool_abierto()
         
         # 1. Escapar caracteres especiales y normalizar datos
         nombre_sanitizado = cls.escapar_caracteres(data.nombre)
@@ -124,7 +111,6 @@ class auth_controller:
         3. Verifica si la contraseña provista coincide con el hash almacenado.
         4. Retorna la información del usuario autenticado (sin el hash de la contraseña).
         """
-        _asegurar_pool_abierto()
 
         # 1. Escapar caracteres especiales y normalizar correo
         email_sanitizado = cls.escapar_caracteres(data.email).lower()
