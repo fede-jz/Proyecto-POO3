@@ -39,3 +39,8 @@ class UsuarioOut(BaseModel):
     email: str
     nombre: str
     creado_en: datetime
+
+
+class UsuarioLoginResponse(BaseModel):
+    token: str
+    usuario: UsuarioOut
