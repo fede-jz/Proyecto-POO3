@@ -1,5 +1,5 @@
 import asyncio
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 import time
 import psutil
 from repositories import procesos_repositorio
@@ -78,16 +78,15 @@ def obtener_procesos_db() -> list[dict]:
     with pool.connection() as conn:
         return procesos_repositorio.listar(conn)
 
-def obtener_proceso_db(proceso_id: UUID) -> dict | None:
+def obtener_proceso_db(proceso_id: UUID) -> dict:
     """
     Obtiene un proceso a través de su ID
     """
     with pool.connection() as conn:
-        return procesos_repositorio.buscar_por_id(conn, proceso_id)
-
-def eliminar_proceso_db(proceso_id: UUID) -> bool:
-    """
-    Eliminar un proceso registrado en la base de datos.
-    """
-    with pool.connection() as conn:
-        return procesos_repositorio.eliminar(conn, proceso_id)
+        proceso = procesos_repositorio.buscar_por_id(conn, proceso_id)
+    if not proceso:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El proceso no existe."
+        )
+    return proceso
