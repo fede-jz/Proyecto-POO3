@@ -71,19 +71,6 @@ def buscar_proceso_en_sistema(nombre: str):
     return None
 
 #------------ENDPOINTS----------------
-
-def crear_proceso_db(nombre: str, estado: str = "desconocido") -> dict:
-    """
-    Crea un nuevo registro de proceso en la base de datos.
-    """
-    # Asegurar que el nombre termine con .exe
-    nombre = nombre + ".exe" if not nombre.endswith(".exe") else nombre  
-    with pool.connection() as conn:
-        proceso_existe = procesos_repositorio.buscar_por_nombre(conn, nombre)
-        if proceso_existe:
-            return proceso_existe
-        return procesos_repositorio.crear(conn, nombre, estado)
-
 def obtener_procesos_db() -> list[dict]:
     """
     Obtiene la lista de procesos registrados en la base de datos.
