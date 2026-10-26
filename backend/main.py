@@ -2,7 +2,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from db import pool
 from controllers import procesos_controller
-from routers import procesos_router, auth_router
+from routers import procesos_router, auth_router, alertas_router
 from fastapi import FastAPI
 
 #-----------API----------------
@@ -24,3 +24,4 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(procesos_router.router, prefix="/procesos", tags=["Procesos"])
 app.include_router(auth_router.router, prefix="/auth", tags=["Autenticación"])
+app.include_router(alertas_router.router, prefix="/alertas", tags=["Alertas"])

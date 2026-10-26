@@ -1,11 +1,13 @@
-def crear(conn, nombre, estado = "desconocido"):
+def obtener_o_crear(conn, nombre):
+    # Si el proceso ya está guardado lo devuelve; el DO UPDATE no cambia nada pero hace que RETURNING devuelva la fila
     return conn.execute(
         """
-        INSERT INTO procesos (nombre, estado)
-        VALUES (%s, %s)
+        INSERT INTO procesos (nombre)
+        VALUES (%s)
+        ON CONFLICT (nombre) DO UPDATE SET nombre = EXCLUDED.nombre
         RETURNING *
         """,
-        (nombre, estado)
+        (nombre,)
     ).fetchone()
 
 def buscar_por_id(conn, proceso_id):
