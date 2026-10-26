@@ -1,9 +1,10 @@
 import hashlib
 import html
-import random 
+import random
 from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
+import jwt
 
 from fastapi import HTTPException, status
 
@@ -14,6 +15,11 @@ except ImportError:
 
 from repositories import usuarios_repositorio
 from schemas.usuario_schema import UsuarioCreate, UsuarioLogin
+
+# CLAVES DE CONFIGURACIÓN JWT (En producción usar os.getenv("JWT_SECRET"))
+SECRET_KEY = "SYS_MONITOR_CLAVE_SUPER_SECRETA_CAMBIAR_EN_PROD"
+ALGORITHM = "HS256"
+EXPIRATION_MINUTES = 60 * 24
 
 
 def _asegurar_pool_abierto():
@@ -48,6 +54,28 @@ class auth_controller:
         """
         return hashlib.sha256(contrasenia_plana.encode("utf-8")).hexdigest() == contrasenia_hasheada
 
+    @staticmethod
+    def crear_token_acceso(usuario_id: str, email: str) -> str:
+        expiracion = datetime.utcnow() + timedelta(minutes=EXPIRATION_MINUTES)
+        payload = {
+            "sub": str(usuario_id),
+            "email": email,
+            "exp": expiracion
+        }
+        return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+    @classmethod
+    def verificar_token(cls, token: str) -> dict:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            return payload
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(
+                status_code=401, detail="El token ha expirado.")
+        except jwt.InvalidTokenError:
+            raise HTTPException(
+                status_code=401, detail="Token de autenticación no válido.")
+
     @classmethod
     def obtener_usuario_por_email(cls, email: str) -> dict | None:
         """
@@ -71,11 +99,11 @@ class auth_controller:
         data: UsuarioCreate,
     ) -> dict:
         """
-        Registra un usuario en la base de datos:
+        Registra un usuario en la base de datos y le asigna alertas por defecto:
         1. Escapa caracteres especiales en los campos de entrada.
-        2. Verifica si el usuario ya existe en la base de datos.
+        2. Verifica si el usuario ya existe.
         3. Hashea la contraseña.
-        4. Almacena el usuario de forma segura con consultas parametrizadas.
+        4. Almacena el usuario, un proceso de sistema, la relación y las alertas iniciales.
         """
         _asegurar_pool_abierto()
 
@@ -93,14 +121,56 @@ class auth_controller:
         # 3. Hashear la contraseña
         contrasenia_hasheada = cls.hash_contrasenia(data.contrasenia)
 
-        # 4. Guardar en la base de datos de forma segura
+        # 4. Guardar en la base de datos y sembrar alertas por defecto
         with pool.connection() as conn:
-            nuevo_usuario = usuarios_repositorio.crear(
-                conn=conn,
-                email=email_sanitizado,
-                contrasenia_hash=contrasenia_hasheada,
-                nombre=nombre_sanitizado,
-            )
+            with conn.cursor() as cur:
+                # A. Crear el usuario utilizando el repositorio existente
+                nuevo_usuario = usuarios_repositorio.crear(
+                    conn=conn,
+                    email=email_sanitizado,
+                    contrasenia_hash=contrasenia_hasheada,
+                    nombre=nombre_sanitizado,
+                )
+                usuario_id = nuevo_usuario["id"]
+
+                # B. Asegurar la existencia de un proceso genérico del sistema
+                cur.execute(
+                    """
+                    INSERT INTO procesos (nombre, estado)
+                    VALUES ('Sistema', 'activo')
+                    ON CONFLICT (nombre) DO UPDATE SET estado = 'activo'
+                    RETURNING id
+                    """
+                )
+                proceso_row = cur.fetchone()
+                proceso_id = proceso_row["id"] if isinstance(
+                    proceso_row, dict) else proceso_row[0]
+
+                # C. Crear la relación en usuarios_procesos
+                cur.execute(
+                    """
+                    INSERT INTO usuarios_procesos (usuario_id, proceso_id, activo)
+                    VALUES (%s, %s, TRUE)
+                    ON CONFLICT (usuario_id, proceso_id) DO UPDATE SET activo = TRUE
+                    RETURNING id
+                    """,
+                    (usuario_id, proceso_id)
+                )
+                up_row = cur.fetchone()
+                up_id = up_row["id"] if isinstance(up_row, dict) else up_row[0]
+
+                # D. Crear las alertas por defecto (CPU y RAM al 80%)
+                cur.execute(
+                    """
+                    INSERT INTO alertas (usuario_proceso_id, tipo, valor_limite, activo)
+                    VALUES 
+                        (%s, 'cpu', 80.0, TRUE),
+                        (%s, 'ram', 80.0, TRUE)
+                    ON CONFLICT (usuario_proceso_id, tipo) DO NOTHING
+                    """,
+                    (up_id, up_id)
+                )
+
             conn.commit()
 
         return nuevo_usuario
@@ -110,19 +180,10 @@ class auth_controller:
         cls,
         data: UsuarioLogin,
     ) -> dict:
-        """
-        Inicia sesión verificando credenciales:
-        1. Escapa caracteres especiales en el correo electrónico.
-        2. Verifica si el usuario existe en la base de datos.
-        3. Verifica si la contraseña provista coincide con el hash almacenado.
-        4. Retorna la información del usuario autenticado (sin el hash de la contraseña).
-        """
         _asegurar_pool_abierto()
 
-        # 1. Escapar caracteres especiales y normalizar correo
         email_sanitizado = cls.escapar_caracteres(data.email).lower()
 
-        # 2. Verificar si el usuario existe en la base de datos
         usuario = cls.obtener_usuario_por_email(email_sanitizado)
         if not usuario or not cls.verificar_contrasenia(data.contrasenia, usuario["contrasenia_hash"]):
             raise HTTPException(
@@ -130,18 +191,25 @@ class auth_controller:
                 detail=f"El correo electrónico o la contraseña son incorrectos."
             )
 
-        # 3. Retornar información del usuario sin exponer el hash de la contraseña
         usuario_seguro = {k: v for k,
                           v in usuario.items() if k != "contrasenia_hash"}
-        return usuario_seguro
+        token = cls.crear_token_acceso(usuario["id"], usuario["email"])
 
+        if "rol" in usuario_seguro and usuario_seguro["rol"] is not None:
+            usuario_seguro["rol"] = str(usuario_seguro["rol"])
+
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "usuario": usuario_seguro
+        }
 
     @classmethod
     def generar_codigo_telegram(cls, usuario_id: str) -> dict:
         _asegurar_pool_abierto()
         codigo = f"SYS-{random.randint(1000, 9999)}"
         expira_en = datetime.utcnow() + timedelta(minutes=10)
-        
+
         with pool.connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -155,11 +223,13 @@ class auth_controller:
                 )
                 resultado = cur.fetchone()
                 conn.commit()
-                
+
                 if not resultado:
-                    raise HTTPException(status_code=404, detail="Usuario no encontrado")
-                    
+                    raise HTTPException(
+                        status_code=404, detail="Usuario no encontrado")
+
         return {"success": True, "codigo": codigo, "expira_en": "10 minutos"}
+
 
 # Alias bajo convención CamelCase
 AuthController = auth_controller

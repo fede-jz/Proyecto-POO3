@@ -44,3 +44,16 @@ class UsuarioOut(BaseModel):
     email: str
     nombre: str
     creado_en: datetime
+    rol: str
+   # telegram_chat_id: Optional[str] = None
+
+
+class Config:
+    from_attributes = True
+
+
+# NUEVO: Esquema para devolver el token junto al perfil validado de UsuarioOut
+class LoginRespuesta(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    usuario: UsuarioOut

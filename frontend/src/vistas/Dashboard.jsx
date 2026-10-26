@@ -8,10 +8,10 @@ import { obtenerDatosYMetricas } from '../controladores/gestorProcesos';
 import { GraficoIndividual } from '../componentes/GraficoIndividual/GraficoIndividual';
 import { PoligonoRecursos } from '../componentes/PoligonoRecursos/PoligonoRecursos';
 import { getStoredTags, saveStoredTags } from '../services/procesos';
-import { getStoredAlertas, saveStoredAlertas } from '../services/alertas';
+import { obtenerDatosAlertas, reconocerAlertaService, eliminarEventoService } from '../services/alertas';
 import './Dashboard.css';
 
-export function Dashboard({ usuario, onCerrarSesion }) {
+export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
   const [procesos, setProcesos] = useState([]);
   const [estadoBackend, setEstadoBackend] = useState('CONECTANDO...');
   const [totalProcesosAgrupados, setTotalProcesosAgrupados] = useState(0);
@@ -24,7 +24,11 @@ export function Dashboard({ usuario, onCerrarSesion }) {
 
   const [vistaActiva, setVistaActiva] = useState('procesos');
   const [menuAjustesAbierto, setMenuAjustesAbierto] = useState(false);
-  const [alertas, setAlertas] = useState(() => getStoredAlertas());
+  
+  // Alertas dinámicas desde el backend de Supabase
+  const [alertas, setAlertas] = useState([]);
+  const [reglasAlertas, setReglasAlertas] = useState([]);
+
   const [selectedProcessNames, setSelectedProcessNames] = useState([]);
 
   const [polygonFilteredNames, setPolygonFilteredNames] = useState(null);
@@ -37,6 +41,15 @@ export function Dashboard({ usuario, onCerrarSesion }) {
 
   const [umbralAdvertencia] = useState(80);
   const [umbralCritico] = useState(90);
+
+  // Función para obtener los eventos y reglas reales del servidor
+  const cargarAlertasReales = useCallback(async () => {
+    const resultado = await obtenerDatosAlertas();
+    if (resultado.success) {
+      setAlertas(resultado.eventos);
+      setReglasAlertas(resultado.reglas);
+    }
+  }, []);
 
   const actualizarInformacion = useCallback(async () => {
     const datos = await obtenerDatosYMetricas();
@@ -88,7 +101,10 @@ export function Dashboard({ usuario, onCerrarSesion }) {
 
   useEffect(() => {
     actualizarInformacion();
+    cargarAlertasReales();
+
     const intervaloDatos = setInterval(actualizarInformacion, 5000);
+    const intervaloAlertas = setInterval(cargarAlertasReales, 15000);
 
     const actualizarReloj = () => {
       const ahora = new Date();
@@ -99,9 +115,10 @@ export function Dashboard({ usuario, onCerrarSesion }) {
 
     return () => {
       clearInterval(intervaloDatos);
+      clearInterval(intervaloAlertas);
       clearInterval(intervaloReloj);
     };
-  }, [actualizarInformacion]);
+  }, [actualizarInformacion, cargarAlertasReales]);
 
   const handleAnalyzeInPolygon = (processNames) => {
     if (!processNames || processNames.length === 0) {
@@ -170,19 +187,29 @@ export function Dashboard({ usuario, onCerrarSesion }) {
   const handleActualizarAlerta = (alertaActualizada) => {
     const actualizadas = alertas.map((a) => (a.id === alertaActualizada.id ? alertaActualizada : a));
     setAlertas(actualizadas);
-    saveStoredAlertas(actualizadas);
   };
 
-  const handleMarcarReconocidas = (ids) => {
-    const actualizadas = alertas.map((a) =>
-      ids.includes(a.id) ? { ...a, estadoEntrega: 'Reconocido' } : a
-    );
-    setAlertas(actualizadas);
-    saveStoredAlertas(actualizadas);
+  const handleMarcarReconocidas = async (ids) => {
+    for (const idFormateado of ids) {
+      const alertaEncontrada = alertas.find((a) => a.id === idFormateado);
+      if (alertaEncontrada && alertaEncontrada.eventoId) {
+        await reconocerAlertaService(alertaEncontrada.eventoId);
+      }
+    }
+    cargarAlertasReales();
+  };
+
+ const handleEliminarAlerta = async (eventoId) => {
+    const res = await eliminarEventoService(eventoId);
+    if (res.success) {
+      cargarAlertasReales();
+    } else {
+      alert(res.mensaje || "No tienes permisos de Administrador para eliminar esta alerta.");
+    }
   };
 
   const conteoAlertasNoReconocidas = alertas.filter((a) => a.estadoEntrega === 'No reconocido').length;
-
+const esAdministrador = usuario?.rol === 'Administrador';
   return (
     <div className="app-container">
       <Navbar
@@ -258,11 +285,13 @@ export function Dashboard({ usuario, onCerrarSesion }) {
           </>
         )}
 
-        {vistaActiva === 'alertas' && (
+      {vistaActiva === 'alertas' && (
           <TablaAlertas
             alertas={alertas}
             onActualizarAlerta={handleActualizarAlerta}
             onMarcarReconocidas={handleMarcarReconocidas}
+            onEliminarAlerta={handleEliminarAlerta}
+            esAdmin={esAdministrador}
           />
         )}
       </main>
@@ -271,10 +300,13 @@ export function Dashboard({ usuario, onCerrarSesion }) {
         abierto={menuAjustesAbierto}
         onCerrar={() => setMenuAjustesAbierto(false)}
         procesos={procesos}
-        alertas={alertas}
+        onActualizarUsuario={(usuarioActualizado) => {
+          console.log("Usuario actualizado:", usuarioActualizado);
+        }}
+        reglasAlertas={reglasAlertas}
         cpuTotal={cpuTotal}
         ramTotal={ramTotal}
-        usuario={usuario} // <--- AÑADI ESTA PROPIEDAD PARA PASAR EL USUARIO AL COMPONENTE MenuAjustes
+        usuario={usuario}
       />
     </div>
   );

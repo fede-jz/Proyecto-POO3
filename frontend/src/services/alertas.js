@@ -1,167 +1,121 @@
-const STORAGE_KEY_ALERTAS = 'monitoreo_alertas_sistema';
+import { obtenerToken } from './authService';
 
-const ALERTAS_INICIALES = [
-  {
-    id: 'ALT-9841',
-    procesoId: 'PID-2980',
-    procesoNombre: 'postgres.exe',
-    tipo: 'Exceso de CPU',
-    severidad: 'Alto',
-    estadoEntrega: 'No reconocido',
-    fechaHora: '2026-10-21 09:14:32',
-    valorDetectado: '91.8%',
-    umbral: '80.0%',
-    mensajeTelegram: {
-      chatId: '782828437',
-      botUsuario: '@SysMonitorAlertBot',
-      enviadoEn: '2026-10-21 09:14:33',
-      reintentos: 0,
-      entregado: true,
-      cuerpo: `🚨 [ALERTA DE ALTA PRIORIDAD]
-ID: ALT-9841
-Proceso: postgres.exe (PID: 2980)
-Evento: Consumo de CPU elevado detectado
-Nivel: 91.8% (Límite configurado: 80.0%)
-Timestamp: 2026-10-21 09:14:32 UTC
-Acción sugerida: Verificar consultas bloqueantes en base de datos.`,
-    },
-    observaciones: 'Se detectó índice faltante en tabla historial; query lenta en ejecución.',
-  },
-  {
-    id: 'ALT-9840',
-    procesoId: 'PID-3412',
-    procesoNombre: 'chrome.exe',
-    tipo: 'Exceso de RAM',
-    severidad: 'Medio',
-    estadoEntrega: 'Reconocido',
-    fechaHora: '2026-10-21 08:55:10',
-    valorDetectado: '84.5%',
-    umbral: '80.0%',
-    mensajeTelegram: {
-      chatId: '782828437',
-      botUsuario: '@SysMonitorAlertBot',
-      enviadoEn: '2026-10-21 08:55:11',
-      reintentos: 0,
-      entregado: true,
-      cuerpo: `⚠️ [ADVERTENCIA DE RECURSOS]
-ID: ALT-9840
-Proceso: chrome.exe (PIDs agrupados: 3412, 5120)
-Evento: Memoria RAM por encima del umbral de advertencia
-Uso detectado: 84.5% (Umbral: 80.0%)
-Timestamp: 2026-10-21 08:55:10 UTC`,
-    },
-    observaciones: 'Pestañas pesadas de desarrollo abiertas; uso controlado.',
-  },
-  {
-    id: 'ALT-9839',
-    procesoId: 'PID-8890',
-    procesoNombre: 'backup_service.exe',
-    tipo: 'Caída de Servicio',
-    severidad: 'Crítico',
-    estadoEntrega: 'No entregado',
-    fechaHora: '2026-10-21 08:40:02',
-    valorDetectado: 'Proceso detenido inesperadamente',
-    umbral: 'KeepAlive Heartbeat',
-    mensajeTelegram: {
-      chatId: '782828437',
-      botUsuario: '@SysMonitorAlertBot',
-      enviadoEn: '2026-10-21 08:40:05',
-      reintentos: 3,
-      entregado: false,
-      cuerpo: `🔥 [FALLO CRÍTICO DE SISTEMA]
-ID: ALT-9839
-Servicio: backup_service.exe
-Evento: Proceso detenido sin código de salida limpio (Crash).
-Telegram Error: Conexión rechazada por timeout de red.`,
-    },
-    observaciones: 'Se reinició el daemon de backup manualmente.',
-  },
-  {
-    id: 'ALT-9838',
-    procesoId: 'PID-8112',
-    procesoNombre: 'node.exe',
-    tipo: 'Exceso de CPU',
-    severidad: 'Medio',
-    estadoEntrega: 'Reconocido',
-    fechaHora: '2026-10-21 08:12:45',
-    valorDetectado: '78.2%',
-    umbral: '75.0%',
-    mensajeTelegram: {
-      chatId: '782828437',
-      botUsuario: '@SysMonitorAlertBot',
-      enviadoEn: '2026-10-21 08:12:46',
-      reintentos: 0,
-      entregado: true,
-      cuerpo: `ℹ️ [AVISO DE RENDIMIENTO]
-ID: ALT-9838
-Proceso: node.exe (PID: 8112)
-CPU: 78.2% en pico de carga de compilación Vite.`,
-    },
-    observaciones: 'Compilación TypeScript ejecutada sin anomalías.',
-  },
-  {
-    id: 'ALT-9837',
-    procesoId: 'PID-4',
-    procesoNombre: 'System',
-    tipo: 'Informativa',
-    severidad: 'Bajo',
-    estadoEntrega: 'Reconocido',
-    fechaHora: '2026-10-21 07:30:00',
-    valorDetectado: 'Reinicio programado finalizado',
-    umbral: 'Mantenimiento preventivo',
-    mensajeTelegram: {
-      chatId: '782828437',
-      botUsuario: '@SysMonitorAlertBot',
-      enviadoEn: '2026-10-21 07:30:01',
-      reintentos: 0,
-      entregado: true,
-      cuerpo: `ℹ️ [INFO DE SISTEMA]
-ID: ALT-9837
-Kernel inicializado correctamente. Todos los pools de conexión abiertos.`,
-    },
-    observaciones: 'Ciclo de mantenimiento completado con éxito.',
-  },
-  {
-    id: 'ALT-9836',
-    procesoId: 'PID-4420',
-    procesoNombre: 'docker.exe',
-    tipo: 'Exceso de RAM',
-    severidad: 'Alto',
-    estadoEntrega: 'No reconocido',
-    fechaHora: '2026-10-21 07:05:18',
-    valorDetectado: '89.4%',
-    umbral: '85.0%',
-    mensajeTelegram: {
-      chatId: '782828437',
-      botUsuario: '@SysMonitorAlertBot',
-      enviadoEn: '2026-10-21 07:05:19',
-      reintentos: 0,
-      entregado: true,
-      cuerpo: `🚨 [ALERTA DE MEMORIA]
-ID: ALT-9836
-Proceso: docker.exe (PID: 4420)
-RAM: 89.4% (Umbral: 85.0%)
-Contenedores en ejecución consumiendo buffer cache.`,
-    },
-  },
-];
+const API_URL = "http://localhost:8000";
 
-export function getStoredAlertas() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_ALERTAS);
-    if (raw) {
-      return JSON.parse(raw);
-    }
-  } catch {
-    // ignore
+/**
+ * Obtiene las reglas y el historial de eventos reales desde FastAPI
+ */
+export async function obtenerDatosAlertas() {
+  const token = obtenerToken();
+  if (!token) {
+    console.warn("⚠️ No se encontró token de acceso en localStorage.");
+    return { success: false, reglas: [], eventos: [] };
   }
-  return ALERTAS_INICIALES;
+
+  try {
+    const respuesta = await fetch(`${API_URL}/alertas`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    if (!respuesta.ok) {
+      throw new Error(`Error en el servidor: ${respuesta.status}`);
+    }
+
+    const data = await respuesta.json();
+
+    // Mapeamos los eventos asegurando todas las propiedades que TablaAlertas.jsx necesita
+    const eventosMapeados = (data.eventos || []).map((ev) => {
+      const valorNum = Number(ev.valor_detectado || 0);
+      const tipoLegible = ev.tipo_evento?.includes('ram') ? 'Exceso de RAM' : 'Exceso de CPU';
+      const idCorto = String(ev.id || '00000000').slice(0, 8).toUpperCase();
+      const procesoNombre = ev.proceso_nombre || 'Sistema';
+
+      return {
+        id: `EV-${idCorto}`,
+        eventoId: ev.id,
+        procesoId: `PID-${String(ev.proceso_id || '0000').slice(0, 4)}`,
+        procesoNombre: procesoNombre,
+        tipo: tipoLegible,
+        severidad: valorNum > 90 ? 'Crítico' : valorNum > 85 ? 'Alto' : 'Medio',
+        estadoEntrega: ev.notificado ? 'Reconocido' : 'No reconocido',
+        fechaHora: ev.creado_en ? new Date(ev.creado_en).toLocaleString() : 'Fecha no disponible',
+        valorDetectado: `${valorNum.toFixed(1)}%`,
+        umbral: '80.0%',
+        observaciones: ev.observaciones || 'Evento registrado automáticamente por el monitor.',
+        mensajeTelegram: {
+          chatId: '782828437',
+          botUsuario: '@SysMonitorAlertBot',
+          enviadoEn: ev.creado_en ? new Date(ev.creado_en).toLocaleString() : '-',
+          reintentos: 0,
+          entregado: ev.notificado,
+          cuerpo: `🚨 [ALERTA DE SISTEMA]\nID: EV-${idCorto}\nProceso: ${procesoNombre}\nTipo: ${tipoLegible}\nValor Detectado: ${valorNum.toFixed(1)}%`
+        }
+      };
+    });
+
+    return { 
+      success: true, 
+      reglas: data.reglas || [], 
+      eventos: eventosMapeados 
+    };
+
+  } catch (error) {
+    console.error("❌ Error al conectar con el backend de alertas:", error);
+    return { success: false, reglas: [], eventos: [] };
+  }
 }
 
-export function saveStoredAlertas(alertas) {
+/**
+ * Elimina un evento de alerta de la base de datos (Requiere rol Administrador)
+ */
+export async function eliminarEventoService(eventoId) {
+  const token = obtenerToken();
   try {
-    localStorage.setItem(STORAGE_KEY_ALERTAS, JSON.stringify(alertas));
-  } catch {
-    // ignore
+    const respuesta = await fetch(`${API_URL}/alertas/eventos/${eventoId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    const resultado = await respuesta.json();
+    
+    if (!respuesta.ok) {
+      return { success: false, mensaje: resultado.detail || "No autorizado" };
+    }
+
+    return { success: true, mensaje: resultado.mensaje };
+  } catch (error) {
+    console.error("Error de red al eliminar evento:", error);
+    return { success: false, mensaje: "Error de conexión con el servidor" };
+  }
+}
+
+/**
+ * Marca un evento de alerta como reconocido en la base de datos
+ */
+export async function reconocerAlertaService(eventoId) {
+  const token = obtenerToken();
+  try {
+    const respuesta = await fetch(`${API_URL}/alertas/eventos/${eventoId}/reconocer`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    const resultado = await respuesta.json();
+    
+    if (!respuesta.ok) {
+      return { success: false, mensaje: resultado.detail || "Error al actualizar" };
+    }
+
+    return { success: true, mensaje: resultado.mensaje };
+  } catch (error) {
+    console.error("Error de red al reconocer alerta:", error);
+    return { success: false, mensaje: "Error de conexión con el servidor" };
   }
 }

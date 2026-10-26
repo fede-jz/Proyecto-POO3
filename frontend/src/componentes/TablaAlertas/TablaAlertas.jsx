@@ -7,7 +7,11 @@ export const TablaAlertas = ({
   alertas,
   onActualizarAlerta,
   onMarcarReconocidas,
+  onEliminarAlerta,
+  esAdmin,
 }) => {
+
+
   // Filtros de búsqueda
   const [busqueda, setBusqueda] = useState('');
   const [filtroSeveridad, setFiltroSeveridad] = useState('todas');
@@ -112,17 +116,10 @@ export const TablaAlertas = ({
     setTimeout(() => setMensajeGuardado(false), 2500);
   };
 
-  // Alternar Reconocimiento
-  const handleAlternarReconocimiento = (alerta) => {
-    const nuevoEstado =
-      alerta.estadoEntrega === 'Reconocido' ? 'No reconocido' : 'Reconocido';
-    const actualizada = {
-      ...alerta,
-      estadoEntrega: nuevoEstado,
-    };
-    onActualizarAlerta(actualizada);
-    if (alertaSeleccionada && alertaSeleccionada.id === alerta.id) {
-      setAlertaSeleccionada(actualizada);
+  // Alternar Reconocimiento (Conectado al backend)
+  const handleAlternarReconocimiento = async (alerta) => {
+    if (onMarcarReconocidas) {
+      await onMarcarReconocidas([alerta.id]);
     }
   };
 
@@ -438,19 +435,36 @@ export const TablaAlertas = ({
                 </div>
               </div>
 
-              {/* Botón rápido de Reconocimiento */}
-              <div className="drawer-acciones-rapidas">
+              {/* Botones de Acción Rápida en el Drawer */}
+              <div className="drawer-acciones-rapidas" style={{ display: 'flex', gap: '10px' }}>
                 <button
                   type="button"
                   className={`btn-toggle-reconocimiento ${
                     alertaSeleccionada.estadoEntrega === 'Reconocido' ? 'reconocido' : ''
                   }`}
+                  style={{ flex: 1 }}
                   onClick={() => handleAlternarReconocimiento(alertaSeleccionada)}
                 >
                   {alertaSeleccionada.estadoEntrega === 'Reconocido'
-                    ? '✓ Alerta Reconocida (Desmarcar)'
+                    ? '✓ Alerta Reconocida'
                     : 'Marcar como Reconocida'}
                 </button>
+
+                {esAdmin && (
+                  <button
+                    type="button"
+                    className="btn-accion-alerta secundario"
+                    style={{ backgroundColor: '#dc3545', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer' }}
+                    onClick={() => {
+                      if (window.confirm("¿Estás seguro de eliminar esta alerta de la base de datos?")) {
+                        onEliminarAlerta(alertaSeleccionada.eventoId);
+                        setAlertaSeleccionada(null);
+                      }
+                    }}
+                  >
+                    🗑️ Eliminar
+                  </button>
+                )}
               </div>
 
               {/* Payload de Telegram Transmitido */}

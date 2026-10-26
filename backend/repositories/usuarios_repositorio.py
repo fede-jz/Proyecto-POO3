@@ -10,7 +10,7 @@ def crear(conn, email: str, contrasenia_hash: str, nombre: str):
         """
         INSERT INTO usuarios (email, contrasenia_hash, nombre)
         VALUES (%s, %s, %s)
-        RETURNING id, email, nombre, creado_en
+        RETURNING id, email, nombre, rol, creado_en
         """,
         (email, contrasenia_hash, nombre)
     ).fetchone()
@@ -22,7 +22,7 @@ def buscar_por_email(conn, email: str):
     """
     return conn.execute(
         """
-        SELECT id, email, contrasenia_hash, nombre, creado_en
+        SELECT id, email, contrasenia_hash, nombre, rol, creado_en
         FROM usuarios
         WHERE LOWER(email) = LOWER(%s)
         """,
@@ -36,7 +36,7 @@ def buscar_por_id(conn, usuario_id: UUID):
     """
     return conn.execute(
         """
-        SELECT id, email, contrasenia_hash, nombre, creado_en
+        SELECT id, email, contrasenia_hash, nombre, rol, creado_en
         FROM usuarios
         WHERE id = %s
         """,
@@ -50,7 +50,7 @@ def listar(conn):
     """
     return conn.execute(
         """
-        SELECT id, email, nombre, creado_en
+        SELECT id, email, nombre, rol, creado_en
         FROM usuarios
         ORDER BY creado_en DESC
         """
