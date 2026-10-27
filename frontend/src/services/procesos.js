@@ -40,7 +40,7 @@ export function saveStoredTags(tagsMap) {
   }
 }
 
-// Listado de procesos del sistema directo del backend con soporte de etiquetas
+// Listado de procesos del sistema directo del backend con soporte de etiquetas y métricas unificadas
 export async function obtenerProcesosSistema() {
   const tagsMap = getStoredTags();
   try {
@@ -50,16 +50,26 @@ export async function obtenerProcesosSistema() {
     }
     const resultado = await response.json();
     
+    // Soporte de doble compatibilidad: extrae la lista de procesos y los totales globales
+    const listaProcesos = resultado.procesos || resultado;
+    const cpuTotal = resultado.cpuTotal !== undefined ? resultado.cpuTotal : 0.0;
+    const ramTotal = resultado.ramTotal !== undefined ? resultado.ramTotal : 0.0;
+    
     // Vincular etiquetas actuales con la lista que devuelve el backend
-    const withTags = resultado.map((p) => ({
+    const withTags = listaProcesos.map((p) => ({
       ...p,
       tags: tagsMap[p.name] || [],
     }));
 
-    return { success: true, data: withTags };
+    return { 
+      success: true, 
+      data: withTags,
+      cpuTotal: cpuTotal,
+      ramTotal: ramTotal
+    };
   } catch (error) {
     console.error('Error de conexión con el backend:', error);
-    return { success: false, data: [], error: error.message };
+    return { success: false, data: [], error: error.message, cpuTotal: 0.0, ramTotal: 0.0 };
   }
 }
 
@@ -83,4 +93,3 @@ export async function buscarProcesoPorNombre(nombre) {
     return { success: false, data: [], error: error.message };
   }
 }
-

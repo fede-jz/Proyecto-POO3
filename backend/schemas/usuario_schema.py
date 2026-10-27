@@ -45,7 +45,7 @@ class UsuarioOut(BaseModel):
     nombre: str
     creado_en: datetime
     rol: str
-   # telegram_chat_id: Optional[str] = None
+    telegram_chat_id: Optional[int] = None
 
 
 class Config:

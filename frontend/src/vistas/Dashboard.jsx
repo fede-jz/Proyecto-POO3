@@ -300,9 +300,7 @@ const esAdministrador = usuario?.rol === 'Administrador';
         abierto={menuAjustesAbierto}
         onCerrar={() => setMenuAjustesAbierto(false)}
         procesos={procesos}
-        onActualizarUsuario={(usuarioActualizado) => {
-          console.log("Usuario actualizado:", usuarioActualizado);
-        }}
+        onActualizarUsuario={onActualizarUsuario}
         reglasAlertas={reglasAlertas}
         cpuTotal={cpuTotal}
         ramTotal={ramTotal}

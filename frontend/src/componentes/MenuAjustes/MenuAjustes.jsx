@@ -287,7 +287,8 @@ export const MenuAjustes = ({
               codigoTelegram={codigoTelegram}
               cargandoCodigo={cargandoCodigo}
               handleSolicitarCodigoTelegram={handleSolicitarCodigoTelegram}
-            />
+              onActualizarUsuario={onActualizarUsuario}
+              />
           )}
         </div>
 

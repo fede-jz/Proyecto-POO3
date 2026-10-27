@@ -1,12 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export const MenuPerfil = ({
   usuario,
   rolOperadorActual,
   codigoTelegram,
   cargandoCodigo,
-  handleSolicitarCodigoTelegram
+  handleSolicitarCodigoTelegram,
+  onActualizarUsuario
 }) => {
+  const [verificando, setVerificando] = useState(false);
+
+  const handleVerificarVinculacion = async () => {
+    setVerificando(true);
+    try {
+      const token = localStorage.getItem('sysmonitor_token');
+      const res = await fetch('http://localhost:8000/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const usuarioActualizado = await res.json();
+        if (onActualizarUsuario) {
+          onActualizarUsuario(usuarioActualizado);
+        }
+      }
+    } catch (err) {
+      console.error("Error al comprobar vinculación:", err);
+    } finally {
+      setVerificando(false);
+    }
+  };
+
   return (
     <div className="seccion-perfil-container">
       <div className="tarjeta-avatar-usuario">
@@ -34,9 +57,23 @@ export const MenuPerfil = ({
         <div className="fila-perfil">
           <span className="label-perfil">Estado de Telegram:</span>
           <span className={`val-perfil ${usuario?.telegram_chat_id ? 'verde-online' : 'advertencia'}`}>
-            {usuario?.telegram_chat_id ? `Vinculado` : 'No vinculado'}
+            {usuario?.telegram_chat_id ? `✅ Vinculado (ID: ${usuario.telegram_chat_id})` : '⚠️ No vinculado'}
           </span>
         </div>
+
+        {usuario?.telegram_chat_id && (
+          <div style={{ marginTop: '0.75rem' }}>
+            <button
+              type="button"
+              onClick={handleVerificarVinculacion}
+              disabled={verificando}
+              className="btn-formato"
+              style={{ background: '#334155', color: '#fff', fontSize: '0.8rem', padding: '0.4rem 0.8rem', cursor: 'pointer' }}
+            >
+              {verificando ? 'Comprobando...' : '🔄 Comprobar Estado'}
+            </button>
+          </div>
+        )}
 
         {!usuario?.telegram_chat_id && (
           <div style={{ marginTop: '1rem', padding: '1rem', background: '#0f172a', borderRadius: '6px' }}>
@@ -49,11 +86,23 @@ export const MenuPerfil = ({
               </button>
             ) : (
               <div className="instrucciones-vinculacion">
-                <p style={{ fontSize: '0.8rem', color: '#38bdf8' }}>1. Abrí el bot: <a href="https://t.me/sysmonitoralert_bot" target="_blank" rel="noreferrer" style={{ color: '#fff' }}>@sysmonitoralert_bot</a></p>
-                <p style={{ fontSize: '0.8rem', color: '#38bdf8' }}>2. Enviale este comando:</p>
-                <div className="font-mono" style={{ background: '#1e293b', padding: '0.5rem', borderRadius: '4px', color: '#4ade80' }}>
+                {/* Enlace corregido con https:// y el nombre exacto de tu bot */}
+                <p style={{ fontSize: '0.8rem', color: '#38bdf8' }}>
+                  1. Abrí el bot: <a href="https://t.me/sysmonitor_prueba1_bot" target="_blank" rel="noreferrer" style={{ color: '#fff' }}> t.me/sysmonitor_prueba1_bot</a>
+                </p>
+                <p style={{ fontSize: '0.8rem', color: '#38bdf8' }}>2. Enviale este comando exacto:</p>
+                <div className="font-mono" style={{ background: '#1e293b', padding: '0.5rem', borderRadius: '4px', color: '#4ade80', margin: '0.5rem 0' }}>
                   /vincular {codigoTelegram}
                 </div>
+                <button
+                  type="button"
+                  onClick={handleVerificarVinculacion}
+                  disabled={verificando}
+                  className="btn-formato"
+                  style={{ marginTop: '0.5rem', background: '#334155', color: '#fff', fontSize: '0.8rem', padding: '0.4rem 0.8rem', cursor: 'pointer', width: '100%' }}
+                >
+                  {verificando ? 'Comprobando...' : '🔄 Comprobar Estado de Vinculación'}
+                </button>
               </div>
             )}
           </div>

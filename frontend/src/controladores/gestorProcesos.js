@@ -14,11 +14,11 @@ export async function obtenerDatosYMetricas() {
   }
 
   const procesos = resultado.data;
-
-  // calculos de consumo
   const totalProcesosAgrupados = procesos.length;
-  const cpuTotal = procesos.reduce((acc, p) => acc + (p.cpu_percent || 0), 0).toFixed(1);
-  const ramTotal = procesos.reduce((acc, p) => acc + (p.memory_percent || 0), 0).toFixed(1);
+
+  // Usamos los totales exactos sincronizados directamente del backend
+  const cpuTotal = (resultado.cpuTotal !== undefined ? Number(resultado.cpuTotal) : 0).toFixed(1);
+  const ramTotal = (resultado.ramTotal !== undefined ? Number(resultado.ramTotal) : 0).toFixed(1);
 
   return {
     procesos,
