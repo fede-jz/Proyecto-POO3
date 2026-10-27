@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, status, Depends, Header, HTTPException
 from controllers.auth_controller import auth_controller
 from schemas import usuario_schema
@@ -43,8 +44,55 @@ def obtener_usuario_autenticado(authorization: str = Header(...)):
                           v in usuario.items() if k != "contrasenia_hash"}
         return usuario_seguro
 
+# Dependencia RBAC: Requiere estrictamente rol 'Administrador'
 
-# NUEVO ENDPOINT PARA VALIDAR EN F5
+
+def requerir_administrador(usuario: dict = Depends(obtener_usuario_autenticado)):
+    if usuario.get("rol") != "Administrador":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acceso denegado: Se requieren permisos de Administrador para realizar esta acción."
+        )
+    return usuario
+
+
 @router.get("/me", response_model=usuario_schema.UsuarioOut)
 def obtener_perfil_actual(usuario: dict = Depends(obtener_usuario_autenticado)):
     return usuario
+
+
+# Endpoint para actualizar el rol de un usuario  y además consultar miembros de la bdd
+@router.get("/miembros", response_model=List[usuario_schema.UsuarioOut])
+def listar_miembros(usuario_actual: dict = Depends(obtener_usuario_autenticado)):
+    """Obtiene la lista real de todos los usuarios registrados en Supabase."""
+    with pool.connection() as conn:
+        miembros = usuarios_repositorio.listar(conn)
+        return miembros
+
+
+@router.put("/miembros/{usuario_id}/rol", response_model=usuario_schema.UsuarioOut)
+def cambiar_rol_miembro(
+    usuario_id: UUID,
+    body: usuario_schema.ActualizarRolSchema,
+    admin_actual: dict = Depends(requerir_administrador)
+):
+    """Permite únicamente a un Administrador modificar el rol de otro usuario."""
+    with pool.connection() as conn:
+        usuario_objetivo = usuarios_repositorio.buscar_por_id(conn, usuario_id)
+        if not usuario_objetivo:
+            raise HTTPException(
+                status_code=404, detail="El miembro especificado no existe.")
+
+        # Prevención de deadlock: No permitir auto-degradación si es el único administrador
+        if str(admin_actual["id"]) == str(usuario_id) and body.rol != "Administrador":
+            total_admins = usuarios_repositorio.contar_administradores(conn)
+            if total_admins <= 1:
+                raise HTTPException(
+                    status_code=400,
+                    detail="No puedes revocar tu propio rol de Administrador siendo el único en el sistema."
+                )
+
+        miembro_actualizado = usuarios_repositorio.actualizar_rol(
+            conn, usuario_id, body.rol)
+        conn.commit()
+        return miembro_actualizado

@@ -1,8 +1,11 @@
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
+
+# Tipos de roles admitidos en el sistema
+RolPermitido = Literal["Administrador", "Operador de Guardia", "Visualizador"]
 
 
 class UsuarioCreate(BaseModel):
@@ -57,3 +60,9 @@ class LoginRespuesta(BaseModel):
     access_token: str
     token_type: str = "bearer"
     usuario: UsuarioOut
+
+# Esquema para actualizar rol de manera tipada y segura
+
+
+class ActualizarRolSchema(BaseModel):
+    rol: RolPermitido = Field(..., description="Nuevo rol asignado al miembro")
