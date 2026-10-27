@@ -1,12 +1,37 @@
+import asyncio
+from fastapi import FastAPI, HTTPException, status
 import time
 import psutil
+from backend.controllers.auth_controller import _asegurar_pool_abierto
 from repositories import procesos_repositorio
 from uuid import UUID
+from db import pool
 
-try:
-    from db import pool
-except ImportError:
-    from backend.db import pool
+def _agrupar_procesos_por_nombre(procesos):
+    # Agrupa los procesos que tengan el mismo nombre y suma sus valores de CPU y memoria
+    grupos = {}
+    for proceso in procesos:
+        grupo = grupos.setdefault(proceso['name'], {
+            'name': proceso['name'],
+            'pids': [],
+            'cpu_percent': 0.0,
+            'memory_percent': 0.0,
+        })
+        grupo['pids'].append(proceso['pid'])
+        grupo['cpu_percent'] += proceso['cpu_percent']
+        grupo['memory_percent'] += proceso['memory_percent']
+
+    for grupo in grupos.values():
+        grupo['cpu_percent'] = round(grupo['cpu_percent'], 2)
+        grupo['memory_percent'] = round(grupo['memory_percent'], 2)
+
+    return list(grupos.values())
+
+async def guardar_procesos_en_cache(app: FastAPI):
+    print("Worker iniciado")
+    while True:
+        app.state.procesos_cache = _agrupar_procesos_por_nombre(listar_procesos_sistema())
+        await asyncio.sleep(5)
 
 def listar_procesos_sistema():
     # La primera medición de CPU siempre da 0, entonces se hace una medición inicial para despues tener el valor correcto
@@ -31,26 +56,6 @@ def listar_procesos_sistema():
         })
     return procesos
 
-def _agrupar_procesos_por_nombre(procesos):
-    # Agrupa los procesos que tengan el mismo nombre y suma sus valores de CPU y memoria
-    grupos = {}
-    for proceso in procesos:
-        grupo = grupos.setdefault(proceso['name'], {
-            'name': proceso['name'],
-            'pids': [],
-            'cpu_percent': 0.0,
-            'memory_percent': 0.0,
-        })
-        grupo['pids'].append(proceso['pid'])
-        grupo['cpu_percent'] += proceso['cpu_percent']
-        grupo['memory_percent'] += proceso['memory_percent']
-
-    for grupo in grupos.values():
-        grupo['cpu_percent'] = round(grupo['cpu_percent'], 2)
-        grupo['memory_percent'] = round(grupo['memory_percent'], 2)
-
-    return list(grupos.values())
-
 def buscar_proceso_en_sistema(nombre: str):
     """
     Busca si un proceso específico está en ejecución y agrupa sus métricas.
@@ -66,36 +71,15 @@ def buscar_proceso_en_sistema(nombre: str):
             return proc
     return None
 
-def _asegurar_pool_abierto():
-    """Abre el pool de conexiones si aún no fue abierto."""
-    if not getattr(pool, '_opened', False):
-        pool.open()
-
 #------------ENDPOINTS----------------
-
-def crear_proceso_db(nombre: str, estado: str = "desconocido") -> dict:
-    """
-    Crea un nuevo registro de proceso en la base de datos.
-    """
-    # Asegurar que el nombre termine con .exe
-    nombre = nombre + ".exe" if not nombre.endswith(".exe") else nombre  
-    with pool.connection() as conn:
-        proceso_existe = procesos_repositorio.buscar_por_nombre(conn, nombre)
-        if proceso_existe:
-            return proceso_existe
-        return procesos_repositorio.crear(conn, nombre, estado)
-
 def obtener_procesos_db() -> list[dict]:
     """
     Obtiene la lista de procesos registrados en la base de datos.
     """
-    # Dejo asegurar pool abierto porque está funcion se llama desde el CLI, en caso de eliminar CLI borrar función
-    # Las demás funciones al utilizarlas solamente fastapi ya se asegura que el pool esté abierto con el lifespan
-    _asegurar_pool_abierto()
     with pool.connection() as conn:
         return procesos_repositorio.listar(conn)
 
-def obtener_proceso_db(proceso_id: UUID) -> dict | None:
+def obtener_proceso_db(proceso_id: UUID) -> dict:
     """
     Obtiene un proceso a través de su ID
     """
@@ -301,3 +285,14 @@ def evaluar_y_disparar_alertas(conn, proceso_id: UUID, cpu_actual: float, ram_ac
                 
                 # Opcional: Aquí podrías disparar el envío del mensaje a Telegram usando alerta["telegram_chat_id"]
                 print(f"[ALERTA AUTOMÁTICA] ¡Umbral de {tipo.upper()} superado! Límite: {limite}%, Detectado: {valor_detectado}%. Evento ID: {evento_creado['id']}")
+        
+        
+        
+#===============REVISAR SI SE QUEDA O SE VA===============================       
+        proceso = procesos_repositorio.buscar_por_id(conn, proceso_id)
+    if not proceso:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El proceso no existe."
+        )
+    return proceso

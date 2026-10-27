@@ -1,8 +1,16 @@
+from asyncio.log import logger
+import threading
 import time
 import psutil
 from datetime import datetime, timedelta
 from db import pool
 from bot.telegram_service import enviar_alerta_telegram
+from fastapi import HTTPException, status
+from psycopg.errors import UniqueViolation
+from repositories import alertas_repositorio, procesos_repositorio
+from schemas.alerta_schema import AlertaCreate
+from uuid import UUID
+
 
 # Control de cooldown y métricas globales compartidas
 ULTIMOS_DISPAROS = {}
@@ -202,11 +210,36 @@ def evaluar_y_capturar_picos_globales():
             conn.commit()
             print("✅ [SUPABASE] Commit exitoso.")
 
-
-def iniciar_bucle_monitoreo():
-    while True:
+def iniciar_bucle_monitoreo(detener: threading.Event) -> None:
+    while not detener.is_set():
         try:
             evaluar_y_capturar_picos_globales()
-        except Exception as e:
-            print("❌ Error en hilo de monitoreo:", e)
-        time.sleep(10)
+        except Exception:
+            logger.exception("❌Error en el hilo de monitoreo")
+        detener.wait(10)  
+
+
+
+#------------ENDPOINTS----------------
+
+def crear_alerta_db(usuario_id: UUID, data: AlertaCreate) -> dict:
+    """
+    Crea una alerta del usuario sobre un proceso:
+    1. Guarda el proceso por nombre, o lo reutiliza si ya estaba guardado.
+    2. Crea la relación usuario-proceso, o la reutiliza si ya existía.
+    3. Crea la alerta.
+    Todo va en la misma conexión, así que si falla la alerta no quedan el proceso ni la relación sueltos.
+    """
+    try:
+        with pool.connection() as conn:
+            proceso = procesos_repositorio.obtener_o_crear(conn, data.nombre_proceso)
+            usuario_proceso = alertas_repositorio.obtener_o_crear_usuario_proceso(conn, usuario_id, proceso["id"])
+            alerta = alertas_repositorio.crear(conn, usuario_proceso["id"], data.tipo, data.valor_limite)
+    except UniqueViolation:
+        # uq_alerta_tipo: una sola alerta por tipo para el mismo usuario y proceso
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Ya existe una alerta de tipo '{data.tipo}' para el proceso '{data.nombre_proceso}'."
+        )
+
+    return {**alerta, "proceso_id": proceso["id"], "nombre_proceso": proceso["nombre"]}

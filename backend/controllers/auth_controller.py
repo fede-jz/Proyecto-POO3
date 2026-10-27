@@ -27,6 +27,22 @@ def _asegurar_pool_abierto():
     if not getattr(pool, "_opened", False):
         pool.open()
 
+import os
+import jwt
+from datetime import datetime, timedelta, timezone
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import Depends, HTTPException, status
+from uuid import UUID
+from db import pool
+from repositories import usuarios_repositorio
+from schemas.usuario_schema import UsuarioCreate, UsuarioLogin
+
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "monitoreo-secret-key")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
+
+security = HTTPBearer()
+
 
 class auth_controller:
 
@@ -107,6 +123,14 @@ class auth_controller:
         """
         _asegurar_pool_abierto()
 
+        """
+        Registra un usuario en la base de datos:
+        1. Escapa caracteres especiales en los campos de entrada.
+        2. Verifica si el usuario ya existe en la base de datos.
+        3. Hashea la contraseña.
+        4. Almacena el usuario de forma segura con consultas parametrizadas.
+        """
+        
         # 1. Escapar caracteres especiales y normalizar datos
         nombre_sanitizado = cls.escapar_caracteres(data.nombre)
         email_sanitizado = cls.escapar_caracteres(data.email).lower()
@@ -171,6 +195,14 @@ class auth_controller:
                     (up_id, up_id)
                 )
 
+        # 4. Guardar en la base de datos de forma segura
+        with pool.connection() as conn:
+            nuevo_usuario = usuarios_repositorio.crear(
+                conn=conn,
+                email=email_sanitizado,
+                contrasenia_hash=contrasenia_hasheada,
+                nombre=nombre_sanitizado,
+            )
             conn.commit()
 
         return nuevo_usuario
@@ -184,6 +216,18 @@ class auth_controller:
 
         email_sanitizado = cls.escapar_caracteres(data.email).lower()
 
+        """
+        Inicia sesión verificando credenciales:
+        1. Escapa caracteres especiales en el correo electrónico.
+        2. Verifica si el usuario existe en la base de datos.
+        3. Verifica si la contraseña provista coincide con el hash almacenado.
+        4. Retorna la información del usuario autenticado (sin el hash de la contraseña).
+        """
+
+        # 1. Escapar caracteres especiales y normalizar correo
+        email_sanitizado = cls.escapar_caracteres(data.email).lower()
+
+        # 2. Verificar si el usuario existe en la base de datos
         usuario = cls.obtener_usuario_por_email(email_sanitizado)
         if not usuario or not cls.verificar_contrasenia(data.contrasenia, usuario["contrasenia_hash"]):
             raise HTTPException(
@@ -229,6 +273,55 @@ class auth_controller:
                         status_code=404, detail="Usuario no encontrado")
 
         return {"success": True, "codigo": codigo, "expira_en": "10 minutos"}
+        # 3. Retornar información del usuario sin exponer el hash de la contraseña
+        usuario_seguro = {k: v for k, v in usuario.items() if k != "contrasenia_hash"}
+        return usuario_seguro
+
+    @staticmethod
+    def crear_token(usuario: dict) -> str:
+        """Genera un JWT con la información mínima del usuario."""
+        expiracion = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
+        payload = {
+            "sub": str(usuario["id"]),
+            "email": usuario["email"],
+            "nombre": usuario["nombre"],
+            "exp": expiracion,
+            "iat": datetime.now(timezone.utc),
+        }
+        return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+    @classmethod
+    def obtener_usuario_por_id(cls, usuario_id: str) -> dict | None:
+        """Busca un usuario activo por su UUID."""
+        try:
+            with pool.connection() as conn:
+                usuario = usuarios_repositorio.buscar_por_id(conn, UUID(usuario_id))
+                if not usuario:
+                    return None
+                return {k: v for k, v in usuario.items() if k != "contrasenia_hash"}
+        except ValueError:
+            return None
+
+    @classmethod
+    def obtener_usuario_actual(cls, token: str) -> dict:
+        """Valida un JWT y devuelve el usuario autenticado."""
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        except jwt.ExpiredSignatureError as exc:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="El token expiró.") from exc
+        except jwt.InvalidTokenError as exc:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido.") from exc
+
+        usuario = cls.obtener_usuario_por_id(str(payload.get("sub")))
+        if not usuario:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado.")
+
+        return usuario
+
+    @staticmethod
+    def get_current_user_dependency(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+        """Dependency para proteger rutas con Bearer token."""
+        return auth_controller.obtener_usuario_actual(credentials.credentials)
 
 
 # Alias bajo convención CamelCase

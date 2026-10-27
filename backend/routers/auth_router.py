@@ -4,8 +4,10 @@ from schemas import usuario_schema
 from db import pool
 from uuid import UUID
 from repositories import usuarios_repositorio
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 router = APIRouter()
+security = HTTPBearer()
 
 
 @router.post("/registro", response_model=usuario_schema.UsuarioOut, status_code=status.HTTP_201_CREATED)
@@ -48,3 +50,33 @@ def obtener_usuario_autenticado(authorization: str = Header(...)):
 @router.get("/me", response_model=usuario_schema.UsuarioOut)
 def obtener_perfil_actual(usuario: dict = Depends(obtener_usuario_autenticado)):
     return usuario
+
+
+
+#==================REVISAR QUE SE QUEDA Y QUE SE QUITA========================
+#-- ESTÁ VINCULADO CON USUARIO_SCHEMA.PY, USUARIO_REPOSITORIO.PY Y AUTH_CONTROLLER.PY
+
+
+@router.post("/registro", response_model=usuario_schema.UsuarioLoginResponse, status_code=status.HTTP_201_CREATED)
+def registrar_usuario(data: usuario_schema.UsuarioCreate):
+    usuario = auth_controller.registrar_usuario(data)
+    token = auth_controller.crear_token(usuario)
+    return {
+        "token": token,
+        "usuario": usuario,
+    }
+
+
+@router.post("/login", response_model=usuario_schema.UsuarioLoginResponse, status_code=status.HTTP_200_OK)
+def iniciar_sesion(data: usuario_schema.UsuarioLogin):
+    usuario = auth_controller.iniciar_sesion(data)
+    token = auth_controller.crear_token(usuario)
+    return {
+        "token": token,
+        "usuario": usuario,
+    }
+
+
+@router.get("/me", response_model=usuario_schema.UsuarioOut, status_code=status.HTTP_200_OK)
+def obtener_usuario_actual(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    return auth_controller.obtener_usuario_actual(credentials.credentials)
