@@ -8,7 +8,12 @@ import { obtenerDatosYMetricas } from '../controladores/gestorProcesos';
 import { GraficoIndividual } from '../componentes/GraficoIndividual/GraficoIndividual';
 import { PoligonoRecursos } from '../componentes/PoligonoRecursos/PoligonoRecursos';
 import { getStoredTags, saveStoredTags } from '../services/procesos';
-import { obtenerDatosAlertas, reconocerAlertaService, eliminarEventoService } from '../services/alertas';
+import { 
+  obtenerMisUmbralesService, 
+  obtenerDatosAlertas, 
+  reconocerAlertaService, 
+  eliminarEventoService 
+} from '../services/alertas';
 import './Dashboard.css';
 
 export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
@@ -39,8 +44,25 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
   const tagsMapRef = useRef(tagsMap);
   tagsMapRef.current = tagsMap;
 
-  const [umbralAdvertencia] = useState(80);
+  // Umbrales dinámicos (con setter para actualizar en tiempo real)
+  const [umbralAdvertencia, setUmbralAdvertencia] = useState(80);
   const [umbralCritico] = useState(90);
+
+  // Cargar el umbral personalizado del usuario al iniciar el dashboard
+  useEffect(() => {
+    async function cargarUmbralesUsuario() {
+      const umbrales = await obtenerMisUmbralesService();
+      if (umbrales && umbrales.cpu) {
+        setUmbralAdvertencia(umbrales.cpu);
+      }
+    }
+    cargarUmbralesUsuario();
+  }, []);
+
+  // Función que actualiza el gráfico de polígonos al guardar en ajustes
+  const handleUmbralesActualizados = (nuevosUmbrales) => {
+    setUmbralAdvertencia(nuevosUmbrales.cpu);
+  };
 
   // Función para obtener los eventos y reglas reales del servidor
   const cargarAlertasReales = useCallback(async () => {
@@ -199,7 +221,7 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
     cargarAlertasReales();
   };
 
- const handleEliminarAlerta = async (eventoId) => {
+  const handleEliminarAlerta = async (eventoId) => {
     const res = await eliminarEventoService(eventoId);
     if (res.success) {
       cargarAlertasReales();
@@ -209,7 +231,8 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
   };
 
   const conteoAlertasNoReconocidas = alertas.filter((a) => a.estadoEntrega === 'No reconocido').length;
-const esAdministrador = usuario?.rol === 'Administrador';
+  const esAdministrador = usuario?.rol === 'Administrador';
+
   return (
     <div className="app-container">
       <Navbar
@@ -228,6 +251,7 @@ const esAdministrador = usuario?.rol === 'Administrador';
           Cerrar sesión
         </button>
       </div>
+
       <main className="main-content">
         {vistaActiva === 'procesos' && (
           <>
@@ -285,7 +309,7 @@ const esAdministrador = usuario?.rol === 'Administrador';
           </>
         )}
 
-      {vistaActiva === 'alertas' && (
+        {vistaActiva === 'alertas' && (
           <TablaAlertas
             alertas={alertas}
             onActualizarAlerta={handleActualizarAlerta}
@@ -305,6 +329,7 @@ const esAdministrador = usuario?.rol === 'Administrador';
         cpuTotal={cpuTotal}
         ramTotal={ramTotal}
         usuario={usuario}
+        onUmbralesActualizados={handleUmbralesActualizados}
       />
     </div>
   );

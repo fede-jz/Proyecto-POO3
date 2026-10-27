@@ -64,3 +64,28 @@ def reconocer_evento(evento_id: str, usuario=Depends(obtener_usuario_autenticado
             raise HTTPException(status_code=404, detail="Evento no encontrado")
         conn.commit()
         return {"success": True, "mensaje": "Alerta marcada como reconocida en Supabase"}
+
+
+# ==========================================
+# NUEVOS ENDPOINTS: Umbrales Personalizados
+# ==========================================
+
+@router.get("/mis-umbrales")
+def obtener_mis_umbrales(usuario: dict = Depends(obtener_usuario_autenticado)):
+    """Permite al usuario autenticado consultar sus propios umbrales"""
+    with pool.connection() as conn:
+        return alertas_repositorio.obtener_umbrales_usuario(conn, usuario["id"])
+
+
+@router.put("/mis-umbrales")
+def actualizar_mis_umbrales(body: dict, usuario: dict = Depends(obtener_usuario_autenticado)):
+    """Permite al usuario autenticado actualizar sus propios umbrales de CPU y RAM"""
+    nuevo_cpu = float(body.get("cpu", 80.0))
+    nuevo_ram = float(body.get("ram", 80.0))
+
+    with pool.connection() as conn:
+        resultado = alertas_repositorio.actualizar_umbrales_usuario(
+            conn, usuario["id"], nuevo_cpu, nuevo_ram
+        )
+        conn.commit()
+        return {"success": True, "umbrales": resultado}

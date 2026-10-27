@@ -15,6 +15,7 @@ export const MenuAjustes = ({
   ramTotal,
   usuario,
   onActualizarUsuario,
+  onUmbralesActualizados
 }) => {
   const [seccionActiva, setSeccionActiva] = useState('roles');
 
@@ -256,6 +257,7 @@ export const MenuAjustes = ({
               idioma={idioma} setIdioma={setIdioma}
               refrescoAuto={refrescoAuto} setRefrescoAuto={setRefrescoAuto}
               notificacionesTelegram={notificacionesTelegram} setNotificacionesTelegram={setNotificacionesTelegram}
+            onUmbralesActualizados={onUmbralesActualizados}
             />
           )}
 

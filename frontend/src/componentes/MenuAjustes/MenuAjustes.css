@@ -1246,3 +1246,131 @@
 .icono-logout {
   font-size: 1.1rem;
 }
+/* =========================================
+   🎯 UMBRALES CON DISEÑO SUTIL Y MINIMALISTA
+   ========================================= */
+
+.card-umbrales-modernos {
+  background: #121821;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.steppers-umbrales-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.stepper-card {
+  background-color: #090d13;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.stepper-label {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stepper-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background-color: #121821;
+  border: 1px solid #273548;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.btn-stepper {
+  background-color: transparent;
+  border: none;
+  color: #38bdf8;
+  font-size: 1rem;
+  font-weight: bold;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-stepper:hover {
+  background-color: rgba(56, 189, 248, 0.1);
+}
+
+.stepper-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.val-advertencia {
+  color: #facc15;
+}
+
+.val-critico {
+  color: #f87171;
+}
+
+.contenedor-boton-guardar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+.btn-guardar-umbrales-sutil {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  font-size: 0.775rem;
+  font-weight: 500;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-guardar-umbrales-sutil:hover {
+  background-color: #2563eb;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.btn-guardar-umbrales-sutil:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toast-exito-umbrales {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  text-align: center;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+@media (max-width: 480px) {
+  .steppers-umbrales-grid {
+    grid-template-columns: 1fr;
+  }
+}
