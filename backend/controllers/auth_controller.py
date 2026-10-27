@@ -5,7 +5,6 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi import Depends, HTTPException, status
-from typing import Optional
 from uuid import UUID
 from db import pool
 from repositories import usuarios_repositorio
@@ -143,7 +142,6 @@ class auth_controller:
     @classmethod
     def obtener_usuario_por_id(cls, usuario_id: str) -> dict | None:
         """Busca un usuario activo por su UUID."""
-        _asegurar_pool_abierto()
         try:
             with pool.connection() as conn:
                 usuario = usuarios_repositorio.buscar_por_id(conn, UUID(usuario_id))
