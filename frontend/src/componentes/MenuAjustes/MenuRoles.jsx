@@ -4,6 +4,7 @@ const ELEMENTOS_POR_PAGINA_ROLES = 10;
 
 export const MenuRoles = ({
   miembros,
+  cargandoMiembros, // 👈 1. Recibimos la prop de carga
   miembrosSeleccionados,
   setMiembrosSeleccionados,
   usuario, 
@@ -91,7 +92,7 @@ export const MenuRoles = ({
             <strong>Modo Solo Lectura</strong>
             <p>
               Has iniciado sesión con el rol <em>{usuario?.rol || 'Visualizador'}</em>. Solo las cuentas con rol{' '}
-              <strong>Administrador</strong> pueden modificar roles, agregar o remover miembros del sistema.
+              <strong>Administrador</strong> pueden modificar roles del sistema.
             </p>
           </div>
         </div>
@@ -101,52 +102,14 @@ export const MenuRoles = ({
             <span className="icono-corona">👑</span>
             <span>Modo Administrador Activo: Permisos completos de gestión y asignación de roles.</span>
           </div>
-          <button
-            type="button"
-            className="btn-abrir-nuevo-miembro"
-            onClick={() => setMostrarModalNuevoMiembro(!mostrarModalNuevoMiembro)}
-          >
-            {mostrarModalNuevoMiembro ? '✕ Cerrar' : '+ Nuevo Miembro'}
-          </button>
         </div>
       )}
 
-      {/* Formulario para agregar miembro (Solo Administradores) */}
-      {esAdmin && mostrarModalNuevoMiembro && (
-        <form className="form-nuevo-miembro" onSubmit={handleCrearMiembro}>
-          <h5>Dar de alta nuevo miembro</h5>
-          <div className="form-miembro-grid">
-            <input
-              type="text"
-              placeholder="Nombre y Apellido"
-              value={nuevoNombre}
-              onChange={(e) => setNuevoNombre(e.target.value)}
-              className="input-miembro"
-              required
-            />
-            <input
-              type="email"
-              placeholder="Correo institucional (@sysmonitor.net)"
-              value={nuevoEmail}
-              onChange={(e) => setNuevoEmail(e.target.value)}
-              className="input-miembro"
-              required
-            />
-            <select
-              value={nuevoRol}
-              onChange={(e) => setNuevoRol(e.target.value)}
-              className="input-miembro select-rol-nuevo"
-            >
-              <option value="Administrador">Administrador</option>
-              <option value="Operador de Guardia">Operador de Guardia</option>
-              <option value="Visualizador">Visualizador</option>
-            </select>
-          </div>
-          <div className="form-miembro-acciones">
-            <button type="submit" className="btn-guardar-miembro">Guardar Miembro</button>
-            <button type="button" className="btn-cancelar-miembro" onClick={() => setMostrarModalNuevoMiembro(false)}>Cancelar</button>
-          </div>
-        </form>
+      {/* Indicador de carga dinámico */}
+      {cargandoMiembros && (
+        <div style={{ padding: '0.75rem', textAlign: 'center', color: '#38bdf8', fontSize: '0.9rem', background: 'rgba(56, 189, 248, 0.1)', borderRadius: '6px', marginBottom: '1rem' }}>
+          ⏳ Sincronizando miembros desde la base de datos...
+        </div>
       )}
 
       {/* Barra de Acciones Masivas (Solo Administradores) */}
@@ -172,7 +135,6 @@ export const MenuRoles = ({
               <option value="Operador de Guardia">Operador de Guardia</option>
               <option value="Visualizador">Visualizador</option>
             </select>
-            <button type="button" className="btn-eliminar-masivo" onClick={handleEliminarSeleccionados}>🗑️ Eliminar</button>
             <button type="button" className="btn-limpiar-sel-miembros" onClick={() => setMiembrosSeleccionados([])}>✕</button>
           </div>
         </div>
@@ -199,7 +161,6 @@ export const MenuRoles = ({
               <th>Usuario</th>
               <th>Rol</th>
               <th>Última Conexión</th>
-              {esAdmin && <th className="th-acciones-admin">Acciones</th>}
             </tr>
           </thead>
           <tbody>
@@ -242,24 +203,14 @@ export const MenuRoles = ({
                       )}
                     </td>
                     <td className="td-conexion font-mono">{m.ultimaConexion}</td>
-                    {esAdmin && (
-                      <td className="td-acciones-admin">
-                        <button
-                          type="button"
-                          className="btn-eliminar-fila"
-                          onClick={() => handleEliminarMiembro(m.id, m.nombre)}
-                          title={`Baja del usuario ${m.nombre}`}
-                        >
-                          🗑️
-                        </button>
-                      </td>
-                    )}
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan={esAdmin ? 5 : 3} className="sin-miembros">No hay miembros registrados.</td>
+                <td colSpan={esAdmin ? 4 : 3} className="sin-miembros">
+                  {cargandoMiembros ? "Cargando registros..." : "No hay miembros registrados en la base de datos."}
+                </td>
               </tr>
             )}
           </tbody>

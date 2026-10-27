@@ -59,7 +59,7 @@ def eliminar_evento(conn, evento_id: str):
             DELETE FROM eventos
             WHERE id = %s
             """,
-            (UUID(evento_id),)
+            (UUID(evento_id),) 
         )
 
 
@@ -72,7 +72,7 @@ def marcar_evento_reconocido(conn, evento_id: str):
             WHERE id = %s
             RETURNING id, notificado
             """,
-            (UUID(evento_id),)  # 👈 Convierte el texto en UUID válido para Supabase
+            (UUID(evento_id),) # 👈 Convierte el texto en UUID válido para Supabase
         )
         return cur.fetchone()
 
@@ -99,3 +99,46 @@ def crear(conn, usuario_proceso_id, tipo, valor_limite = None):
         """,
         (usuario_proceso_id, tipo, valor_limite)
     ).fetchone()
+
+def obtener_umbrales_usuario(conn, usuario_id) -> dict:
+    """Obtiene los umbrales actuales de CPU y RAM del usuario."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT a.tipo, a.valor_limite 
+            FROM alertas a
+            JOIN usuarios_procesos up ON a.usuario_proceso_id = up.id
+            WHERE up.usuario_id = %s
+            """,
+            (usuario_id,)
+        )
+        filas = cur.fetchall()
+        umbrales = {"cpu": 80.0, "ram": 80.0}
+        for f in filas:
+            umbrales[f["tipo"]] = float(f["valor_limite"])
+        return umbrales
+
+
+def actualizar_umbrales_usuario(conn, usuario_id, nuevo_cpu, nuevo_ram) -> dict:
+    """Actualiza de forma atómica los umbrales de CPU y RAM del usuario."""
+    with conn.cursor() as cur:
+        # Actualizar CPU
+        cur.execute(
+            """
+            UPDATE alertas a SET valor_limite = %s
+            FROM usuarios_procesos up
+            WHERE a.usuario_proceso_id = up.id AND up.usuario_id = %s AND a.tipo = 'cpu'
+            """,
+            (nuevo_cpu, usuario_id)
+        )
+        # Actualizar RAM
+        cur.execute(
+            """
+            UPDATE alertas a SET valor_limite = %s
+            FROM usuarios_procesos up
+            WHERE a.usuario_proceso_id = up.id AND up.usuario_id = %s AND a.tipo = 'ram'
+            """,
+            (nuevo_ram, usuario_id)
+        )
+        conn.commit()
+    return {"cpu": nuevo_cpu, "ram": nuevo_ram}

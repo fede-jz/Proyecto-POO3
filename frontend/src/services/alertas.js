@@ -119,3 +119,50 @@ export async function reconocerAlertaService(eventoId) {
     return { success: false, mensaje: "Error de conexión con el servidor" };
   }
 }
+
+/**
+ * Obtiene los umbrales personalizados del usuario autenticado
+ */
+export async function obtenerMisUmbralesService() {
+  const token = obtenerToken();
+  if (!token) return { cpu: 80, ram: 80 };
+
+  try {
+    const res = await fetch(`${API_URL}/alertas/mis-umbrales`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    console.error("Error al obtener umbrales:", err);
+  }
+  return { cpu: 80, ram: 80 };
+}
+
+/**
+ * Actualiza los umbrales personalizados de CPU y RAM del usuario en Supabase
+ */
+export async function guardarMisUmbralesService(cpu, ram) {
+  const token = obtenerToken();
+  if (!token) throw new Error("No hay sesión activa");
+
+  const res = await fetch(`${API_URL}/alertas/mis-umbrales`, {
+    method: "PUT",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ cpu: parseFloat(cpu), ram: parseFloat(ram) })
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Error al actualizar los umbrales.");
+  }
+  return data;
+}

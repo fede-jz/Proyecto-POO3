@@ -3,6 +3,7 @@ import threading
 import time
 import psutil
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from db import pool
 from bot.telegram_service import enviar_alerta_telegram
 from fastapi import HTTPException, status
@@ -11,6 +12,9 @@ from repositories import alertas_repositorio, procesos_repositorio
 from schemas.alerta_schema import AlertaCreate
 from uuid import UUID
 
+
+# Zona horaria oficial de Argentina (UTC-3)
+TZ_ARG = ZoneInfo("America/Argentina/Buenos_Aires")
 
 # Control de cooldown y métricas globales compartidas
 ULTIMOS_DISPAROS = {}
@@ -30,12 +34,10 @@ def evaluar_y_capturar_picos_globales():
     METRICAS_ACTUALES["cpu"] = cpu_global
     METRICAS_ACTUALES["ram"] = ram_global
 
-    print(
-        f"\n📊 [MONITOREO] CPU actual: {cpu_global}% | RAM actual: {ram_global}%")
+    print(f"\n📊 [MONITOREO] CPU actual: {cpu_global}% | RAM actual: {ram_global}%")
 
     with pool.connection() as conn:
         with conn.cursor() as cur:
-            # Buscar reglas activas y sus usuarios asociados
             cur.execute(
                 """
                 SELECT a.id, a.tipo, a.valor_limite, u.telegram_chat_id, u.nombre as usuario_nombre
@@ -48,14 +50,14 @@ def evaluar_y_capturar_picos_globales():
             reglas_alertas = cur.fetchall()
 
             if not reglas_alertas:
-                print(
-                    "ℹ️ [MONITOREO] No hay reglas de alertas activas en la base de datos.")
                 return
 
             eventos_cpu_creados = []
             eventos_ram_creados = []
-            ahora = datetime.utcnow()
 
+            ahora_utc = datetime.utcnow()
+            ahora_arg = datetime.now(TZ_ARG)
+            
             # Evaluar consumo frente al umbral personal de cada regla
             for regla in reglas_alertas:
                 alerta_id = regla["id"]
@@ -77,12 +79,11 @@ def evaluar_y_capturar_picos_globales():
                 if supera_umbral:
                     # Validar cooldown individual
                     ultimo = ULTIMOS_DISPAROS.get(alerta_id)
-                    if not ultimo or ahora - ultimo > timedelta(minutes=COOLDOWN_MINUTOS):
+                    if not ultimo or ahora_utc - ultimo > timedelta(minutes=COOLDOWN_MINUTOS):
 
                         print(
                             f"⚠️ [UMBRAL SUPERADO] {usuario_nombre} -> {tipo_regla.upper()} en {valor_detectado}% (Límite: {valor_limite}%)")
 
-                        # Registrar evento en BDD
                         tipo_evento = f"exceso_{tipo_regla}"
                         cur.execute(
                             """
@@ -100,7 +101,7 @@ def evaluar_y_capturar_picos_globales():
                         print(
                             f"💾 [SUPABASE] Evento guardado (ID: {evento_id})")
 
-                        ULTIMOS_DISPAROS[alerta_id] = ahora
+                        ULTIMOS_DISPAROS[alerta_id] = ahora_utc
 
                         if tipo_regla == 'cpu':
                             eventos_cpu_creados.append(evento_id)
@@ -109,12 +110,14 @@ def evaluar_y_capturar_picos_globales():
 
                         # Enviar notificación directa a Telegram del usuario
                         if chat_id:
+                            fecha_local_str = ahora_arg.strftime(
+                                '%d/%m/%Y %H:%M:%S')
                             mensaje = (
                                 f"🚨 *ALERTA DE SISTEMA: Exceso de {tipo_regla.upper()}*\n\n"
                                 f"👤 Operador: {usuario_nombre}\n"
                                 f"📊 Uso actual: {valor_detectado}%\n"
                                 f"⚠️ Límite configurado: {valor_limite}%\n"
-                                f"🕒 Hora: {ahora.strftime('%H:%M:%S')} UTC"
+                                f"🕒 Hora (ARG): {fecha_local_str}"
                             )
                             try:
                                 enviar_alerta_telegram(chat_id, mensaje)
@@ -128,7 +131,7 @@ def evaluar_y_capturar_picos_globales():
             if not eventos_cpu_creados and not eventos_ram_creados:
                 conn.commit()
                 return
-
+            
             # Capturar procesos activos para el Top 5
             procesos_activos = []
             for p in psutil.process_iter(['name', 'cpu_percent', 'memory_percent']):
@@ -144,7 +147,7 @@ def evaluar_y_capturar_picos_globales():
                     })
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                     pass
-
+            
             # Guardar historial Top 5 CPU
             if eventos_cpu_creados:
                 procesos_activos.sort(key=lambda x: x['cpu'], reverse=True)
@@ -175,7 +178,7 @@ def evaluar_y_capturar_picos_globales():
                          proc["ram"], evento_principal_cpu)
                     )
                 print("💾 [SUPABASE] Top 5 CPU guardado.")
-
+            
             # Guardar historial Top 5 RAM
             if eventos_ram_creados:
                 procesos_activos.sort(key=lambda x: x['ram'], reverse=True)

@@ -55,3 +55,28 @@ def listar(conn):
         ORDER BY creado_en DESC
         """
     ).fetchall()
+
+
+def actualizar_rol(conn, usuario_id: UUID, nuevo_rol: str):
+    """Actualiza el rol de un usuario específico de manera parametrizada."""
+    return conn.execute(
+        """
+        UPDATE usuarios
+        SET rol = %s
+        WHERE id = %s
+        RETURNING id, email, nombre, rol, telegram_chat_id, creado_en
+        """,
+        (nuevo_rol, usuario_id)
+    ).fetchone()
+
+
+def contar_administradores(conn) -> int:
+    """Devuelve la cantidad total de administradores registrados en el sistema."""
+    row = conn.execute(
+        """
+        SELECT COUNT(*) as total
+        FROM usuarios
+        WHERE rol = 'Administrador'
+        """
+    ).fetchone()
+    return row["total"] if isinstance(row, dict) else row[0]
