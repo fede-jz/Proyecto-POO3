@@ -18,17 +18,10 @@ CREATE TABLE procesos (
     estado  VARCHAR(20)  NOT NULL DEFAULT 'desconocido'
 );
 
-CREATE TABLE usuarios_procesos (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    usuario_id  UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-    proceso_id  UUID NOT NULL REFERENCES procesos(id) ON DELETE CASCADE,
-    activo      BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT uq_usuario_proceso UNIQUE (usuario_id, proceso_id) -- Una unica relacion por usuario y proceso
-);
-
 CREATE TABLE alertas (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    usuario_proceso_id  UUID NOT NULL REFERENCES usuarios_procesos(id) ON DELETE CASCADE,
+    proceso_id          UUID REFERENCES procesos(id) ON DELETE CASCADE,     -- NULL = alerta global del servidor
+    creado_por          UUID REFERENCES usuarios(id) ON DELETE SET NULL,    -- Administrador que creó la alerta
     tipo                VARCHAR(10) NOT NULL CHECK (tipo IN ('caida', 'cpu', 'ram')),
     valor_limite        REAL,                        -- porcentaje; NULL para 'caida'
     activo              BOOLEAN NOT NULL DEFAULT TRUE,
@@ -37,7 +30,8 @@ CREATE TABLE alertas (
         (tipo = 'caida' AND valor_limite IS NULL)
         OR (tipo IN ('cpu', 'ram') AND valor_limite BETWEEN 0 AND 100)
     ),
-    CONSTRAINT uq_alerta_tipo UNIQUE (usuario_proceso_id, tipo)  -- una regla por tipo
+    CONSTRAINT ck_alertas_global_sin_caida CHECK (proceso_id IS NOT NULL OR tipo <> 'caida'),  -- el servidor no tiene 'caida'
+    CONSTRAINT uq_alerta_tipo UNIQUE NULLS NOT DISTINCT (proceso_id, tipo)  -- una regla por tipo por proceso, y una global por tipo
 );
 
 CREATE TABLE eventos (

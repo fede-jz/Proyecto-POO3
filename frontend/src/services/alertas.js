@@ -121,14 +121,14 @@ export async function reconocerAlertaService(eventoId) {
 }
 
 /**
- * Obtiene los umbrales personalizados del usuario autenticado
+ * Obtiene los umbrales de las alertas globales del servidor (null si alguna no existe)
  */
 export async function obtenerMisUmbralesService() {
   const token = obtenerToken();
   if (!token) return { cpu: 80, ram: 80 };
 
   try {
-    const res = await fetch(`${API_URL}/alertas/mis-umbrales`, {
+    const res = await fetch(`${API_URL}/alertas/globales`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -145,13 +145,13 @@ export async function obtenerMisUmbralesService() {
 }
 
 /**
- * Actualiza los umbrales personalizados de CPU y RAM del usuario en Supabase
+ * Crea o actualiza las alertas globales de CPU y RAM del servidor (requiere rol Administrador)
  */
 export async function guardarMisUmbralesService(cpu, ram) {
   const token = obtenerToken();
   if (!token) throw new Error("No hay sesión activa");
 
-  const res = await fetch(`${API_URL}/alertas/mis-umbrales`, {
+  const res = await fetch(`${API_URL}/alertas/globales`, {
     method: "PUT",
     headers: {
       "Authorization": `Bearer ${token}`,

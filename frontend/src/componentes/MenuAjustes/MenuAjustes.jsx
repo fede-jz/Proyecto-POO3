@@ -258,6 +258,7 @@ export const MenuAjustes = ({
               refrescoAuto={refrescoAuto} setRefrescoAuto={setRefrescoAuto}
               notificacionesTelegram={notificacionesTelegram} setNotificacionesTelegram={setNotificacionesTelegram}
             onUmbralesActualizados={onUmbralesActualizados}
+              esAdmin={esAdmin}
             />
           )}
 

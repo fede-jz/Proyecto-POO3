@@ -16,7 +16,8 @@ export const MenuGeneral = ({
   setRefrescoAuto,
   notificacionesTelegram,
   setNotificacionesTelegram,
-  onUmbralesActualizados
+  onUmbralesActualizados,
+  esAdmin
 }) => {
   const [umbralCPU, setUmbralCPU] = useState(80);
   const [umbralRAM, setUmbralRAM] = useState(80);
@@ -27,8 +28,9 @@ export const MenuGeneral = ({
     async function cargarUmbrales() {
       const datos = await obtenerMisUmbralesService();
       if (datos) {
-        setUmbralCPU(datos.cpu);
-        setUmbralRAM(datos.ram);
+        // null = todavía no hay alerta global de ese tipo
+        setUmbralCPU(datos.cpu ?? 80);
+        setUmbralRAM(datos.ram ?? 80);
       }
     }
     cargarUmbrales();
@@ -58,8 +60,12 @@ export const MenuGeneral = ({
       {/* 🎯 TARJETA: UMBRALES PERSONALIZADOS (Estilo delicado y limpio) */}
       <div className="card-ajuste-opcion card-umbrales-modernos">
         <div className="opcion-texto">
-          <strong>Umbrales de Alerta</strong>
-          <span>Definí los topes de consumo para tus avisos personalizados.</span>
+          <strong>Umbrales Globales del Servidor</strong>
+          <span>
+            {esAdmin
+              ? 'Definí los topes de consumo de todo el servidor que disparan alertas para todos los usuarios.'
+              : 'Topes de consumo de todo el servidor. Solo un Administrador puede modificarlos.'}
+          </span>
         </div>
 
         {mensajeExito && (
@@ -76,6 +82,7 @@ export const MenuGeneral = ({
               <button
                 type="button"
                 className="btn-stepper"
+                disabled={!esAdmin}
                 onClick={() => setUmbralCPU(prev => Math.max(10, prev - 1))}
                 title="Reducir 1%"
               >
@@ -87,6 +94,7 @@ export const MenuGeneral = ({
               <button
                 type="button"
                 className="btn-stepper"
+                disabled={!esAdmin}
                 onClick={() => setUmbralCPU(prev => Math.min(99, prev + 1))}
                 title="Aumentar 1%"
               >
@@ -102,6 +110,7 @@ export const MenuGeneral = ({
               <button
                 type="button"
                 className="btn-stepper"
+                disabled={!esAdmin}
                 onClick={() => setUmbralRAM(prev => Math.max(10, prev - 1))}
                 title="Reducir 1%"
               >
@@ -113,6 +122,7 @@ export const MenuGeneral = ({
               <button
                 type="button"
                 className="btn-stepper"
+                disabled={!esAdmin}
                 onClick={() => setUmbralRAM(prev => Math.min(99, prev + 1))}
                 title="Aumentar 1%"
               >
@@ -126,7 +136,7 @@ export const MenuGeneral = ({
           <button
             type="button"
             onClick={handleGuardarUmbrales}
-            disabled={guardandoUmbrales}
+            disabled={guardandoUmbrales || !esAdmin}
             className="btn-guardar-umbrales-sutil"
           >
             {guardandoUmbrales ? "Guardando..." : "Guardar cambios"}
