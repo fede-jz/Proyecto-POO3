@@ -3,7 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from db import pool
 from controllers import procesos_controller
-from routers import procesos_router, auth_router, alertas_router
+from routers import procesos_router, auth_router, alertas_router, usuarios_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -37,3 +37,4 @@ app.add_middleware(
 app.include_router(procesos_router.router, prefix="/procesos", tags=["Procesos"])
 app.include_router(auth_router.router, prefix="/auth", tags=["Autenticación"])
 app.include_router(alertas_router.router, prefix="/alertas", tags=["Alertas"])
+app.include_router(usuarios_router.router, prefix="/usuarios", tags=["Usuarios"])

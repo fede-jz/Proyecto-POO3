@@ -55,3 +55,27 @@ def listar(conn):
         ORDER BY creado_en DESC
         """
     ).fetchall()
+
+
+def actualizar_rol(conn, usuario_id: UUID, rol: str):
+    """
+    Cambia el rol de un usuario y devuelve el usuario actualizado (sin exponer hash de contraseña).
+    """
+    return conn.execute(
+        """
+        UPDATE usuarios
+        SET rol = %s
+        WHERE id = %s
+        RETURNING id, email, nombre, rol, creado_en
+        """,
+        (rol, usuario_id)
+    ).fetchone()
+
+
+def contar_administradores(conn) -> int:
+    """
+    Cuenta cuántos usuarios tienen rol Administrador.
+    """
+    return conn.execute(
+        "SELECT COUNT(*) AS total FROM usuarios WHERE rol = 'Administrador'"
+    ).fetchone()["total"]

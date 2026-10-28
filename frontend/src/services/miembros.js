@@ -13,7 +13,7 @@ export async function obtenerMiembros() {
   }
 
   try {
-    const respuesta = await fetch(`${API_URL}/auth/miembros`, {
+    const respuesta = await fetch(`${API_URL}/usuarios/`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -53,7 +53,7 @@ export async function actualizarRolMiembro(usuarioId, nuevoRol) {
   const token = localStorage.getItem('access_token') || localStorage.getItem('sysmonitor_token') || localStorage.getItem('token');
   if (!token) throw new Error('No hay una sesión activa.');
 
-  const respuesta = await fetch(`${API_URL}/auth/miembros/${usuarioId}/rol`, {
+  const respuesta = await fetch(`${API_URL}/usuarios/${usuarioId}/rol`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,

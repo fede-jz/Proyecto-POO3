@@ -49,3 +49,7 @@ class UsuarioOut(BaseModel):
 class UsuarioLoginResponse(BaseModel):
     access_token: str
     usuario: UsuarioOut
+
+
+class UsuarioActualizarRol(BaseModel):
+    rol: RolUsuario
