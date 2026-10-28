@@ -12,7 +12,7 @@ def registrar_usuario(data: usuario_schema.UsuarioCreate):
     usuario = auth_controller.registrar_usuario(data)
     token = auth_controller.crear_token(usuario)
     return {
-        "token": token,
+        "access_token": token,
         "usuario": usuario,
     }
 
@@ -22,7 +22,7 @@ def iniciar_sesion(data: usuario_schema.UsuarioLogin):
     usuario = auth_controller.iniciar_sesion(data)
     token = auth_controller.crear_token(usuario)
     return {
-        "token": token,
+        "access_token": token,
         "usuario": usuario,
     }
 

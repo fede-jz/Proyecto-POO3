@@ -1,5 +1,5 @@
 const API_URL = "http://localhost:8000";
-const TOKEN_KEY = "sysmonitor_token";
+const TOKEN_KEY = "access_token";
 
 export async function registrarUsuario(datos) {
   const respuesta = await fetch(`${API_URL}/auth/registro`, {

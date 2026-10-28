@@ -13,7 +13,7 @@ export const MenuPerfil = ({
   const handleVerificarVinculacion = async () => {
     setVerificando(true);
     try {
-      const token = localStorage.getItem('sysmonitor_token');
+      const token = localStorage.getItem('access_token');
       const res = await fetch('http://localhost:8000/auth/me', {
         headers: { Authorization: `Bearer ${token}` }
       });

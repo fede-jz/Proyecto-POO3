@@ -1,6 +1,5 @@
 import re
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
@@ -42,5 +41,5 @@ class UsuarioOut(BaseModel):
 
 
 class UsuarioLoginResponse(BaseModel):
-    token: str
+    access_token: str
     usuario: UsuarioOut
