@@ -1,0 +1,38 @@
+.pm-login-card {
+  width: min(100%, 438px);
+}
+
+.pm-login-card .pm-auth-card__heading {
+  margin-bottom: 28px;
+}
+
+.pm-login-card .pm-form {
+  gap: 20px;
+}
+
+.pm-login-card .pm-form-options {
+  margin-top: -2px;
+}
+
+/* Estilo para el botón tipo enlace que cambia de vista en la SPA */
+.pm-switch-button {
+  background: none;
+  border: none;
+  color: #39a2ff;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.75rem;
+  padding: 0;
+}
+
+.pm-switch-button:hover {
+  color: #78c5ff;
+  text-decoration: underline;
+}
+
+@media (max-width: 520px) {
+  .pm-login-card .pm-auth-card__heading h2 {
+    font-size: 1.45rem;
+  }
+}

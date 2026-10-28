@@ -1,0 +1,392 @@
+.card-poligono {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 1.25rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-poligono.estado-advertencia {
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+.card-poligono.estado-critico {
+  border-color: rgba(248, 113, 113, 0.6);
+}
+
+.poligono-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.poligono-titulos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.titulo-con-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-poligono h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.badge-modo-general {
+  background-color: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  font-family: var(--font-mono, monospace);
+}
+
+.badge-modo-filtro {
+  background-color: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+}
+
+.sub-poligono {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.poligono-acciones-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.selector-metricas {
+  display: flex;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.selector-metricas button {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selector-metricas button.activo {
+  background-color: var(--border-color);
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+/* Botón Maximizar / Minimizar */
+.btn-toggle-maximizar {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: #94a3b8;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-toggle-maximizar:hover {
+  border-color: #38bdf8;
+  color: #38bdf8;
+  background-color: #161d26;
+}
+
+.icono-max {
+  font-size: 0.8125rem;
+  line-height: 1;
+}
+
+/* =========================================
+   BANNER DE FILTRO ACTIVO
+   ========================================= */
+
+.banner-filtro-poligono {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  color: #fde68a;
+  flex-wrap: wrap;
+}
+
+.texto-filtro-poligono {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.texto-filtro-poligono strong {
+  color: #ffffff;
+}
+
+.btn-restablecer-poligono {
+  background-color: rgba(245, 158, 11, 0.25);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-restablecer-poligono:hover {
+  background-color: #d97706;
+}
+
+/* =========================================
+   GRÁFICO SVG
+   ========================================= */
+
+.grafico-svg-container {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grafico-svg-container.svg-maximizado {
+  height: 320px;
+}
+
+.svg-poligono {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.grid-line {
+  stroke: var(--border-color);
+  stroke-dasharray: 2 4;
+  stroke-width: 1;
+}
+
+.eje-label {
+  font-size: 9px;
+  fill: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.linea-umbral {
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.linea-umbral.advertencia {
+  stroke: #776C2E;
+  stroke-dasharray: 3 3;
+}
+
+.linea-umbral.critico {
+  stroke: #924349;
+  stroke-dasharray: 3 3;
+}
+
+.label-umbral-critico {
+  font-size: 10px;
+  fill: #f87171;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.label-umbral-adv {
+  font-size: 10px;
+  fill: #fbbf24;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.poligono-linea {
+  stroke-width: 2;
+  transition: d 0.3s ease;
+}
+
+.nodo-punto {
+  cursor: pointer;
+  transition: r 0.2s ease;
+}
+
+.poligono-linea.cpu {
+  stroke: #C7B44C;
+  stroke-width: 1.75;
+}
+
+.nodo-punto.cpu {
+  fill: #C7B44C;
+}
+
+.poligono-linea.ram {
+  stroke: #619242;
+  stroke-width: 1.75;
+}
+
+.nodo-punto.ram {
+  fill: #619242;
+}
+
+.nodo-punto:hover {
+  r: 6 !important;
+}
+
+.tooltip-flotante {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(9, 12, 16, 0.95);
+  border: 1px solid var(--border-color);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.tooltip-flotante strong {
+  color: var(--accent-cyan);
+}
+
+.tooltip-flotante span {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+}
+
+.poligono-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.poligono-stats.stats-maximizado {
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.stat-group {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.stat-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.stat-details strong {
+  color: var(--text-main);
+  font-family: var(--font-mono);
+}
+
+.sin-datos {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.eje-x-horarios {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  padding: 0 4px;
+}
+
+/* =========================================
+   MODAL PANTALLA COMPLETA (MAXIMIZADO)
+   ========================================= */
+
+.poligono-backdrop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: rgba(9, 12, 16, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.contenedor-modal-poligono {
+  width: 100%;
+  max-width: 960px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.card-poligono.en-modal {
+  background-color: #0d121a;
+  border: 1px solid #334155;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+  padding: 1.75rem;
+}
