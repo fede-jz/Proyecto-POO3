@@ -145,7 +145,7 @@ export const TablaAlertas = ({
     }
   };
 
-  // Badge de Entrega Telegram
+  // Badge de reconocimiento de la alerta
   const renderBadgeEntrega = (estado) => {
     switch (estado) {
       case 'Reconocido':
@@ -156,7 +156,7 @@ export const TablaAlertas = ({
         );
       case 'No reconocido':
         return (
-          <span className="badge-entrega entrega-no-reconocido" title="Notificada a Telegram pero sin atención">
+          <span className="badge-entrega entrega-no-reconocido" title="Todavía nadie la reconoció">
             <span className="dot-estado">●</span> No reconocido
           </span>
         );
@@ -219,10 +219,9 @@ export const TablaAlertas = ({
             }}
             className="select-filtro-alertas"
           >
-            <option value="todos">Telegram: Todos</option>
+            <option value="todos">Estado: Todos</option>
             <option value="no reconocido">No reconocido</option>
             <option value="reconocido">Reconocido</option>
-            <option value="no entregado">No entregado</option>
           </select>
         </div>
       </div>
@@ -278,7 +277,7 @@ export const TablaAlertas = ({
                 <th>ID Proceso</th>
                 <th>Tipo de Alerta</th>
                 <th>Severidad</th>
-                <th>Estado Entrega (Telegram)</th>
+                <th>Estado</th>
                 <th>Fecha y Horario</th>
               </tr>
             </thead>

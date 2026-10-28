@@ -13,7 +13,7 @@ export async function obtenerDatosAlertas() {
   }
 
   try {
-    const respuesta = await fetch(`${API_URL}/alertas`, {
+    const respuesta = await fetch(`${API_URL}/alertas/eventos`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -24,26 +24,30 @@ export async function obtenerDatosAlertas() {
       throw new Error(`Error en el servidor: ${respuesta.status}`);
     }
 
-    const data = await respuesta.json();
+    const eventos = await respuesta.json();
+
+    const TIPOS_LEGIBLES = { cpu: 'Exceso de CPU', ram: 'Exceso de RAM', caida: 'Caída de proceso' };
 
     // Mapeamos los eventos asegurando todas las propiedades que TablaAlertas.jsx necesita
-    const eventosMapeados = (data.eventos || []).map((ev) => {
+    const eventosMapeados = eventos.map((ev) => {
+      const esCaida = ev.tipo === 'caida';
       const valorNum = Number(ev.valor_detectado || 0);
-      const tipoLegible = ev.tipo_evento?.includes('ram') ? 'Exceso de RAM' : 'Exceso de CPU';
+      const tipoLegible = TIPOS_LEGIBLES[ev.tipo] || ev.tipo_evento;
       const idCorto = String(ev.id || '00000000').slice(0, 8).toUpperCase();
-      const procesoNombre = ev.proceso_nombre || 'Sistema';
+      // Sin proceso = alerta global del servidor
+      const procesoNombre = ev.nombre_proceso || 'Servidor (global)';
 
       return {
         id: `EV-${idCorto}`,
         eventoId: ev.id,
-        procesoId: `PID-${String(ev.proceso_id || '0000').slice(0, 4)}`,
+        procesoId: ev.proceso_id ? `PID-${String(ev.proceso_id).slice(0, 4)}` : 'GLOBAL',
         procesoNombre: procesoNombre,
         tipo: tipoLegible,
-        severidad: valorNum > 90 ? 'Crítico' : valorNum > 85 ? 'Alto' : 'Medio',
-        estadoEntrega: ev.notificado ? 'Reconocido' : 'No reconocido',
+        severidad: esCaida || valorNum > 90 ? 'Crítico' : valorNum > 85 ? 'Alto' : 'Medio',
+        estadoEntrega: ev.reconocido ? 'Reconocido' : 'No reconocido',
         fechaHora: ev.creado_en ? new Date(ev.creado_en).toLocaleString() : 'Fecha no disponible',
-        valorDetectado: `${valorNum.toFixed(1)}%`,
-        umbral: '80.0%',
+        valorDetectado: esCaida ? '—' : `${valorNum.toFixed(1)}%`,
+        umbral: ev.valor_limite != null ? `${Number(ev.valor_limite).toFixed(1)}%` : '—',
         observaciones: ev.observaciones || 'Evento registrado automáticamente por el monitor.',
         mensajeTelegram: {
           chatId: '782828437',
@@ -51,15 +55,16 @@ export async function obtenerDatosAlertas() {
           enviadoEn: ev.creado_en ? new Date(ev.creado_en).toLocaleString() : '-',
           reintentos: 0,
           entregado: ev.notificado,
-          cuerpo: `🚨 [ALERTA DE SISTEMA]\nID: EV-${idCorto}\nProceso: ${procesoNombre}\nTipo: ${tipoLegible}\nValor Detectado: ${valorNum.toFixed(1)}%`
+          cuerpo: `🚨 [ALERTA DE SISTEMA]\nID: EV-${idCorto}\nProceso: ${procesoNombre}\nTipo: ${tipoLegible}\nValor Detectado: ${esCaida ? '—' : `${valorNum.toFixed(1)}%`}`
         }
       };
     });
 
-    return { 
-      success: true, 
-      reglas: data.reglas || [], 
-      eventos: eventosMapeados 
+    // Las reglas no se usan en el front; se devuelve vacío para mantener el formato que espera el Dashboard
+    return {
+      success: true,
+      reglas: [],
+      eventos: eventosMapeados
     };
 
   } catch (error) {

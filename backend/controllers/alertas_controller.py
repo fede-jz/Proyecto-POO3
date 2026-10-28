@@ -36,6 +36,37 @@ def guardar_alertas_globales_db(usuario_id: UUID, data: AlertasGlobalesUpdate) -
         ram = alertas_repositorio.guardar_global(conn, "ram", data.ram, usuario_id)
     return {"cpu": cpu["valor_limite"], "ram": ram["valor_limite"]}
 
+def listar_eventos_db() -> list[dict]:
+    """
+    Obtiene los últimos eventos (alertas disparadas), del más reciente al más antiguo.
+    """
+    with pool.connection() as conn:
+        return alertas_repositorio.listar_eventos(conn)
+
+def reconocer_evento_db(evento_id: UUID, usuario_id: UUID) -> dict:
+    """
+    Marca un evento como reconocido por el usuario (alguien se está ocupando).
+    """
+    with pool.connection() as conn:
+        if not alertas_repositorio.reconocer_evento(conn, evento_id, usuario_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="El evento no existe."
+            )
+        return alertas_repositorio.buscar_evento_por_id(conn, evento_id)
+
+def eliminar_evento_db(evento_id: UUID) -> dict:
+    """
+    Elimina un evento de la base de datos.
+    """
+    with pool.connection() as conn:
+        if not alertas_repositorio.eliminar_evento(conn, evento_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="El evento no existe."
+            )
+    return {"mensaje": "Evento eliminado."}
+
 def crear_alerta_db(usuario_id: UUID, data: AlertaCreate) -> dict:
     """
     Crea una alerta del sistema:

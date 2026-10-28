@@ -39,7 +39,10 @@ CREATE TABLE eventos (
     alerta_id        UUID NOT NULL REFERENCES alertas(id) ON DELETE CASCADE,
     tipo_evento      VARCHAR(20) NOT NULL,
     valor_detectado  REAL,
-    notificado       BOOLEAN NOT NULL DEFAULT FALSE,
+    notificado       BOOLEAN NOT NULL DEFAULT FALSE,                    -- se envió el aviso por Telegram
+    reconocido       BOOLEAN NOT NULL DEFAULT FALSE,                    -- alguien marcó que se está ocupando
+    reconocido_por   UUID REFERENCES usuarios(id) ON DELETE SET NULL,
+    reconocido_en    TIMESTAMPTZ,
     creado_en        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

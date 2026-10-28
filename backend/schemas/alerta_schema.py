@@ -42,6 +42,22 @@ class AlertasGlobalesOut(BaseModel):
     ram: Optional[float]    # None = no hay alerta global de RAM
 
 
+class EventoOut(BaseModel):
+    id: UUID
+    alerta_id: UUID
+    tipo: str                         # tipo de la alerta que se disparó: 'cpu', 'ram' o 'caida'
+    valor_limite: Optional[float]     # límite que tenía la alerta
+    proceso_id: Optional[UUID]        # None = alerta global del servidor
+    nombre_proceso: Optional[str]
+    tipo_evento: str
+    valor_detectado: Optional[float]
+    notificado: bool
+    reconocido: bool
+    reconocido_por: Optional[UUID]
+    reconocido_en: Optional[datetime]
+    creado_en: datetime
+
+
 class AlertaOut(BaseModel):
     id: UUID
     proceso_id: Optional[UUID]        # None = alerta global del servidor
