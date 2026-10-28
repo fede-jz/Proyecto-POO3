@@ -172,6 +172,14 @@ class auth_controller:
         """Dependency para proteger rutas con Bearer token."""
         return auth_controller.obtener_usuario_actual(credentials.credentials)
 
+    @staticmethod
+    def requerir_administrador(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+        """Dependency para proteger rutas que solo puede usar un Administrador."""
+        usuario = auth_controller.obtener_usuario_actual(credentials.credentials)
+        if usuario["rol"] != "Administrador":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Se requiere rol de Administrador.")
+        return usuario
+
 
 # Alias bajo convención CamelCase
 AuthController = auth_controller

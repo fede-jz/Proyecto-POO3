@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
@@ -33,10 +34,15 @@ class UsuarioLogin(BaseModel):
         return v_limpio
 
 
+# Roles admitidos, iguales al CHECK ck_usuarios_rol de la BBDD
+RolUsuario = Literal["Administrador", "Operador de Guardia", "Visualizador"]
+
+
 class UsuarioOut(BaseModel):
     id: UUID
     email: str
     nombre: str
+    rol: RolUsuario
     creado_en: datetime
 
 

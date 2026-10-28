@@ -4,10 +4,12 @@ CREATE TABLE usuarios (
     email                   VARCHAR(255) NOT NULL UNIQUE,
     contrasenia_hash        VARCHAR(255) NOT NULL,
     nombre                  VARCHAR(100) NOT NULL,
+    rol                     VARCHAR(20)  NOT NULL DEFAULT 'Visualizador',
     telegram_chat_id        BIGINT UNIQUE,
     telegram_cod            VARCHAR(20),
     telegram_cod_expira_en  TIMESTAMPTZ,
-    creado_en               TIMESTAMPTZ NOT NULL DEFAULT now()
+    creado_en               TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT ck_usuarios_rol CHECK (rol IN ('Administrador', 'Operador de Guardia', 'Visualizador'))
 );
 
 CREATE TABLE procesos (
