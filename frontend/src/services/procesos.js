@@ -1,3 +1,5 @@
+import { obtenerToken } from './authService';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const TAGS_STORAGE_KEY = 'monitoreo_procesos_tags';
@@ -44,7 +46,11 @@ export function saveStoredTags(tagsMap) {
 export async function obtenerProcesosSistema() {
   const tagsMap = getStoredTags();
   try {
-    const response = await fetch(`${API_URL}/procesos/sistema`);
+    const response = await fetch(`${API_URL}/procesos/sistema`, {
+      headers: {
+        "Authorization": `Bearer ${obtenerToken()}`,
+      },
+    });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
