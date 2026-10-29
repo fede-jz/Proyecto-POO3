@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from controllers import monitor_controller
+from controllers import monitor_controller, telegram_controller
 from fastapi import FastAPI, HTTPException, status
 import time
 import psutil
@@ -44,6 +44,8 @@ async def guardar_procesos_en_cache(app: FastAPI):
             eventos = await asyncio.to_thread(monitor_controller.evaluar_alertas_db, app.state.procesos_cache)
             for evento in eventos:
                 print(f"[ALERTA] {evento['tipo_evento']} (valor: {evento['valor_detectado']}) - evento {evento['id']}")
+            if eventos:
+                await asyncio.to_thread(telegram_controller.notificar_eventos_db, eventos)
         except Exception:
             logging.exception("Error al evaluar las alertas")
         await asyncio.sleep(5)

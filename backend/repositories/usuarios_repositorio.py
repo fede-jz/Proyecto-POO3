@@ -122,3 +122,11 @@ def vincular_telegram(conn, usuario_id: UUID, chat_id: int):
         """,
         (chat_id, usuario_id)
     )
+
+
+def listar_chats_telegram(conn) -> list[int]:
+    """
+    Devuelve los chats de Telegram de todos los usuarios vinculados.
+    """
+    filas = conn.execute("SELECT telegram_chat_id FROM usuarios WHERE telegram_chat_id IS NOT NULL").fetchall()
+    return [fila["telegram_chat_id"] for fila in filas]

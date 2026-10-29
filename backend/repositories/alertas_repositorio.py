@@ -56,6 +56,9 @@ def marcar_disparada(conn, alerta_id, disparada):
         (disparada, disparada, alerta_id)
     )
 
+def marcar_notificado(conn, evento_id):
+    return conn.execute("UPDATE eventos SET notificado = TRUE WHERE id = %s", (evento_id,))
+
 def actualizar_ultima_alerta(conn, alerta_id):
     return conn.execute("UPDATE alertas SET ultima_alerta_en = now() WHERE id = %s", (alerta_id,))
 

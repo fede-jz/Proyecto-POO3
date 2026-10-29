@@ -6,7 +6,7 @@ import threading
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
-from repositories import usuarios_repositorio
+from repositories import alertas_repositorio, usuarios_repositorio
 from uuid import UUID
 from db import pool
 
@@ -17,6 +17,8 @@ TELEGRAM_BOT_USUARIO = os.getenv("TELEGRAM_BOT_USUARIO", "")
 CODIGO_LARGO = 8
 CODIGO_CARACTERES = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # sin 0/O ni 1/I para que no se confundan al escribirlo
 CODIGO_VIGENCIA_MINUTOS = 10
+
+TIPOS_LEGIBLES = {"cpu": "Exceso de CPU", "ram": "Exceso de RAM", "caida": "Caída de proceso"}
 
 def _llamar_api(metodo: str, datos: dict, timeout: float = 10):
     """
@@ -116,3 +118,43 @@ def iniciar_bot(detener: threading.Event) -> threading.Thread | None:
     hilo.start()
     print("Bot de Telegram iniciado")
     return hilo
+
+#------------NOTIFICACIONES----------------
+
+def _armar_mensaje(evento: dict) -> str:
+    destino = evento["nombre_proceso"] or "Servidor (global)"
+    lineas = [f"🚨 {TIPOS_LEGIBLES.get(evento['tipo'], evento['tipo_evento'])}", f"📍 {destino}"]
+    if evento["valor_detectado"] is not None:
+        lineas.append(f"📊 Valor detectado: {evento['valor_detectado']:.1f}% (límite {evento['valor_limite']:.1f}%)")
+    lineas.append(f"🕒 {evento['creado_en'].astimezone():%d/%m/%Y %H:%M:%S}")
+    return "\n".join(lineas)
+
+def notificar_eventos_db(eventos: list[dict]):
+    """
+    Envía cada evento a todos los usuarios vinculados. Si le llegó al menos a uno, el evento queda como notificado.
+    """
+    if not TELEGRAM_BOT_TOKEN or not eventos:
+        return
+    with pool.connection() as conn:
+        chats = usuarios_repositorio.listar_chats_telegram(conn)
+        detalles = [alertas_repositorio.buscar_evento_por_id(conn, evento["id"]) for evento in eventos]
+    if not chats:
+        return
+
+    # Los envíos se hacen sin tener una conexión de la pool tomada
+    notificados = []
+    for evento in detalles:
+        texto = _armar_mensaje(evento)
+        enviados = 0
+        for chat_id in chats:
+            try:
+                _enviar_mensaje(chat_id, texto)
+                enviados += 1
+            except Exception as error:
+                print(f"[TELEGRAM] No se pudo enviar el evento {evento['id']} al chat {chat_id}: {error}")
+        if enviados:
+            notificados.append(evento["id"])
+
+    with pool.connection() as conn:
+        for evento_id in notificados:
+            alertas_repositorio.marcar_notificado(conn, evento_id)
