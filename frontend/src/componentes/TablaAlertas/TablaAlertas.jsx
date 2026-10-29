@@ -470,30 +470,19 @@ export const TablaAlertas = ({
               <div className="drawer-seccion-card">
                 <div className="seccion-subtitulo">
                   <span>📱 Transmisión Telegram</span>
-                  {renderBadgeEntrega(alertaSeleccionada.estadoEntrega)}
-                </div>
-
-                <div className="telegram-meta-grid">
-                  <div className="meta-item">
-                    <span className="meta-label">Chat ID:</span>
-                    <span className="meta-val font-mono">{alertaSeleccionada.mensajeTelegram.chatId}</span>
-                  </div>
-                  <div className="meta-item">
-                    <span className="meta-label">Bot:</span>
-                    <span className="meta-val font-mono">{alertaSeleccionada.mensajeTelegram.botUsuario}</span>
-                  </div>
-                  <div className="meta-item">
-                    <span className="meta-label">Despacho:</span>
-                    <span className="meta-val font-mono">{alertaSeleccionada.mensajeTelegram.enviadoEn}</span>
-                  </div>
-                  <div className="meta-item">
-                    <span className="meta-label">Reintentos:</span>
-                    <span className="meta-val font-mono">{alertaSeleccionada.mensajeTelegram.reintentos}</span>
-                  </div>
+                  {alertaSeleccionada.mensajeTelegram.entregado ? (
+                    <span className="badge-entrega entrega-reconocido" title="Se envió a los usuarios con Telegram vinculado">
+                      <span className="dot-estado">●</span> Enviado
+                    </span>
+                  ) : (
+                    <span className="badge-entrega entrega-no-reconocido" title="No se envió: no hay usuarios vinculados o falló el envío">
+                      <span className="dot-estado">●</span> No enviado
+                    </span>
+                  )}
                 </div>
 
                 <div className="telegram-mensaje-box">
-                  <span className="box-label">Payload transmitido:</span>
+                  <span className="box-label">Mensaje:</span>
                   <pre className="telegram-cuerpo font-mono">
                     {alertaSeleccionada.mensajeTelegram.cuerpo}
                   </pre>

@@ -86,14 +86,25 @@ export const MenuPerfil = ({
               </button>
             ) : (
               <div className="instrucciones-vinculacion">
-                {/* Enlace corregido con https:// y el nombre exacto de tu bot */}
-                <p style={{ fontSize: '0.8rem', color: '#38bdf8' }}>
-                  1. Abrí el bot: <a href="https://t.me/sysmonitor_prueba1_bot" target="_blank" rel="noreferrer" style={{ color: '#fff' }}> t.me/sysmonitor_prueba1_bot</a>
+                {/* El link abre el chat con el bot; al tocar "Iniciar" Telegram le manda "/start <codigo>" y queda vinculado */}
+                <a
+                  href={`https://t.me/${codigoTelegram.bot}?start=${codigoTelegram.codigo}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-formato btn-pdf"
+                  style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}
+                >
+                  📲 Abrir Telegram y tocar "Iniciar"
+                </a>
+                <p style={{ fontSize: '0.8rem', color: '#38bdf8', marginTop: '0.75rem' }}>
+                  ¿No se abrió o usás Telegram en otro dispositivo? Buscá a{' '}
+                  <a href={`https://t.me/${codigoTelegram.bot}`} target="_blank" rel="noreferrer" style={{ color: '#fff' }}>@{codigoTelegram.bot}</a>{' '}
+                  y enviale:
                 </p>
-                <p style={{ fontSize: '0.8rem', color: '#38bdf8' }}>2. Enviale este comando exacto:</p>
                 <div className="font-mono" style={{ background: '#1e293b', padding: '0.5rem', borderRadius: '4px', color: '#4ade80', margin: '0.5rem 0' }}>
-                  /vincular {codigoTelegram}
+                  /vincular {codigoTelegram.codigo}
                 </div>
+                <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>El código vence en 10 minutos.</p>
                 <button
                   type="button"
                   onClick={handleVerificarVinculacion}

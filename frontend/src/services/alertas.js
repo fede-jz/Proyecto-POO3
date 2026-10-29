@@ -49,13 +49,15 @@ export async function obtenerDatosAlertas() {
         valorDetectado: esCaida ? '—' : `${valorNum.toFixed(1)}%`,
         umbral: ev.valor_limite != null ? `${Number(ev.valor_limite).toFixed(1)}%` : '—',
         observaciones: ev.observaciones || 'Evento registrado automáticamente por el monitor.',
+        // Mismo formato que el mensaje que manda el backend (telegram_controller._armar_mensaje)
         mensajeTelegram: {
-          chatId: '782828437',
-          botUsuario: '@SysMonitorAlertBot',
-          enviadoEn: ev.creado_en ? new Date(ev.creado_en).toLocaleString() : '-',
-          reintentos: 0,
           entregado: ev.notificado,
-          cuerpo: `🚨 [ALERTA DE SISTEMA]\nID: EV-${idCorto}\nProceso: ${procesoNombre}\nTipo: ${tipoLegible}\nValor Detectado: ${esCaida ? '—' : `${valorNum.toFixed(1)}%`}`
+          cuerpo: [
+            `🚨 ${tipoLegible}`,
+            `📍 ${procesoNombre}`,
+            ...(esCaida ? [] : [`📊 Valor detectado: ${valorNum.toFixed(1)}% (límite ${Number(ev.valor_limite).toFixed(1)}%)`]),
+            `🕒 ${ev.creado_en ? new Date(ev.creado_en).toLocaleString() : '-'}`,
+          ].join('\n'),
         }
       };
     });

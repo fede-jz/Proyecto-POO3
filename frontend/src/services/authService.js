@@ -54,6 +54,23 @@ export async function iniciarSesion(credenciales) {
   return data.usuario; // Retorna el usuario real logueado
 }
 
+/**
+ * Genera el código para vincular el Telegram del usuario logueado.
+ * Devuelve { codigo, bot, expira_en }: con el bot y el código se arma el link t.me/<bot>?start=<codigo>
+ */
+export async function generarCodigoTelegram() {
+  const respuesta = await fetch(`${API_URL}/auth/telegram/codigo`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${obtenerToken()}` },
+  });
+
+  const data = await respuesta.json();
+  if (!respuesta.ok) {
+    throw new Error(data.detail || "Error al generar el código de Telegram.");
+  }
+  return data;
+}
+
 export async function obtenerUsuarioActual() {
   const token = obtenerToken();
   if (!token) return null;

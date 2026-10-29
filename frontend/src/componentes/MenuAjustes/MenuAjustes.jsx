@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { obtenerMiembros, actualizarRolMiembro } from '../../services/miembros';
+import { generarCodigoTelegram } from '../../services/authService';
 import { MenuRoles } from './MenuRoles';
 import { MenuGeneral } from './MenuGeneral';
 import { MenuExportacion } from './MenuExportacion';
@@ -76,15 +77,10 @@ export const MenuAjustes = ({
   const handleSolicitarCodigoTelegram = async () => {
     setCargandoCodigo(true);
     try {
-      const respuesta = await fetch(`http://localhost:8000/auth/telegram/generar-codigo?usuario_id=${usuario.id}`, { method: "POST" });
-      const data = await respuesta.json();
-      if (respuesta.ok) {
-        setCodigoTelegram(data.codigo);
-      } else {
-        alert(data.detail || "Error al generar el código");
-      }
+      // { codigo, bot }: MenuPerfil arma con esto el link al bot
+      setCodigoTelegram(await generarCodigoTelegram());
     } catch (err) {
-      alert("Error de red al conectar con el servidor.");
+      alert(err.message || "Error de red al conectar con el servidor.");
     } finally {
       setCargandoCodigo(false);
     }
