@@ -24,6 +24,41 @@ def guardar_global(conn, tipo, valor_limite, creado_por):
 def listar_globales(conn):
     return conn.execute("SELECT * FROM alertas WHERE proceso_id IS NULL").fetchall()
 
+def listar_activas(conn):
+    return conn.execute(
+        """
+        SELECT a.*, p.nombre AS nombre_proceso
+        FROM alertas a
+        LEFT JOIN procesos p ON p.id = a.proceso_id
+        WHERE a.activo
+        """
+    ).fetchall()
+
+def crear_evento(conn, alerta_id, tipo_evento, valor_detectado = None):
+    return conn.execute(
+        """
+        INSERT INTO eventos (alerta_id, tipo_evento, valor_detectado)
+        VALUES (%s, %s, %s)
+        RETURNING *
+        """,
+        (alerta_id, tipo_evento, valor_detectado)
+    ).fetchone()
+
+def marcar_disparada(conn, alerta_id, disparada):
+    # Al dispararse también se registra cuándo fue la última vez
+    return conn.execute(
+        """
+        UPDATE alertas
+        SET disparada = %s,
+            ultima_alerta_en = CASE WHEN %s THEN now() ELSE ultima_alerta_en END
+        WHERE id = %s
+        """,
+        (disparada, disparada, alerta_id)
+    )
+
+def actualizar_ultima_alerta(conn, alerta_id):
+    return conn.execute("UPDATE alertas SET ultima_alerta_en = now() WHERE id = %s", (alerta_id,))
+
 def listar_eventos(conn, limite = 100):
     # Los más recientes primero, con los datos de la alerta que los disparó
     return conn.execute(

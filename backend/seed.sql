@@ -15,7 +15,8 @@ CREATE TABLE usuarios (
 CREATE TABLE procesos (
     id      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nombre  VARCHAR(255) NOT NULL UNIQUE,
-    estado  VARCHAR(20)  NOT NULL DEFAULT 'desconocido'
+    estado  VARCHAR(20)  NOT NULL DEFAULT 'desconocido',
+    CONSTRAINT ck_procesos_estado CHECK (estado IN ('desconocido', 'activo', 'inactivo'))  -- activo = corriendo, inactivo = caído
 );
 
 CREATE TABLE alertas (
@@ -25,6 +26,7 @@ CREATE TABLE alertas (
     tipo                VARCHAR(10) NOT NULL CHECK (tipo IN ('caida', 'cpu', 'ram')),
     valor_limite        REAL,                        -- porcentaje; NULL para 'caida'
     activo              BOOLEAN NOT NULL DEFAULT TRUE,
+    disparada           BOOLEAN NOT NULL DEFAULT FALSE,   -- cpu/ram: el límite está superado ahora; evita repetir el evento mientras dure
     ultima_alerta_en    TIMESTAMPTZ,
     CONSTRAINT ck_alertas_valor_limite CHECK ( -- Chequea si es caída => no hay límite; si es cpu o ram => límite entre 0 y 100
         (tipo = 'caida' AND valor_limite IS NULL)

@@ -1,4 +1,6 @@
 import asyncio
+import logging
+from controllers import monitor_controller
 from fastapi import FastAPI, HTTPException, status
 import time
 import psutil
@@ -37,6 +39,13 @@ async def guardar_procesos_en_cache(app: FastAPI):
             "cpuTotal": psutil.cpu_percent(),
             "ramTotal": psutil.virtual_memory().percent,
         }
+        # Un error en la base no tiene que frenar el worker: se registra y se reintenta en la próxima vuelta
+        try:
+            eventos = await asyncio.to_thread(monitor_controller.evaluar_alertas_db, app.state.procesos_cache)
+            for evento in eventos:
+                print(f"[ALERTA] {evento['tipo_evento']} (valor: {evento['valor_detectado']}) - evento {evento['id']}")
+        except Exception:
+            logging.exception("Error al evaluar las alertas")
         await asyncio.sleep(5)
 
 def listar_procesos_sistema():
