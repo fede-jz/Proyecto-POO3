@@ -28,45 +28,26 @@
 
 ---
 
-## ✨ Funcionalidades Principales
+## Funcionalidades
 
-### 🖥️ Monitoreo y Dashboard en Tiempo Real
-* **Dashboard Centralizado:** Interfaz web con listado de procesos agrupados por nombre, consumo de CPU/RAM, uso total del servidor y gráficos con actualización cada 5 segundos. Incluye buscador y etiquetas.
-* **Agente Recolector (Python):** Script instalable en el servidor destino que lee métricas mediante `psutil` y envía la información de forma segura a la API.
-* **Detección de Caída (Heartbeat):** Sistema centinela que detecta instantáneamente si un proceso específico se detiene o si el servidor completo pierde conexión.
-
-### 🔔 Motor de Alertas y Eventos
-* **Configuración de Umbrales:** Alertas globales (CPU/RAM total del servidor) gestionadas desde *Ajustes → General*, y alertas individuales por proceso (consumo excesivo o caída).
-* **Historial de Eventos:** Registro automático de incidencias con capacidad de "reconocer" el problema (marcar que está en revisión) o eliminarlas (solo Administradores).
-* **Notificaciones por Telegram:** Vinculación directa desde *Ajustes → Perfil* para recibir alertas y eventos de forma inmediata en el celular.
-
-### 🔐 Seguridad y Control de Acceso
-* **Autenticación Segura:** Registro e inicio de sesión de usuarios protegidos mediante tokens JWT.
-* **Gestión de Servidores:** Panel dedicado para dar de alta servidores y obtener un Token de seguridad único para el agente.
-* **Control de Roles:** Sistema de gestión de miembros y permisos en *Ajustes → Roles* (por ejemplo, restricciones para crear o modificar alertas).
+- **Registro e inicio de sesión** con JWT.
+- **Procesos del sistema:** lista de procesos agrupados por nombre con su consumo de CPU y RAM, uso total del servidor y gráfico de consumo. Se actualiza cada 5 segundos. Incluye buscador y etiquetas.
+- **Alertas** (solo las crea/modifica un Administrador, las ven todos):
+  - **Globales del servidor:** CPU o RAM total por encima de un porcentaje. Se configuran en *Ajustes → General*.
+  - **Por proceso:** CPU o RAM de un proceso por encima de un porcentaje, o **caída** del proceso (deja de estar corriendo).
+- **Eventos:** cada vez que una alerta se dispara se registra un evento. Se ven en la sección *Alertas*, se pueden **reconocer** (marcar que alguien se está ocupando) y un Administrador los puede eliminar.
+- **Notificaciones por Telegram:** cada usuario puede vincular su Telegram desde *Ajustes → Perfil* y recibe los eventos en su celular.
+- **Gestión de miembros y roles** en *Ajustes → Roles*.
 
 ---
 
-## 🚀 Tecnologías y Herramientas
+## Tecnologías
 
-El proyecto está diseñado bajo un enfoque liviano y moderno, optimizado para garantizar un Producto Mínimo Viable (MVP) funcional en poco tiempo.
+- **Backend:** Python, FastAPI, psycopg (PostgreSQL), psutil, PyJWT.
+- **Frontend:** React + Vite.
+- **Base de datos:** PostgreSQL **15 o superior**.
+- **Notificaciones:** API de bots de Telegram.
 
-### 💻 Frontend
-* <img src="https://shields.io" /> **React.js + Vite:** Para una interfaz de usuario reactiva, de alta densidad informativa y un entorno de desarrollo ultrarrápido.
-
-### ⚙️ Backend
-* <img src="https://shields.io" /> **Python (FastAPI):** Framework asíncrono de alto rendimiento para gestionar la lógica de negocio y la recepción de métricas.
-* <img src="https://shields.io" /> **PyJWT:** Implementación para el manejo seguro de la autenticación de usuarios basada en tokens.
-
-### 🗄️ Base de Datos e Infraestructura
-* <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" /> **PostgreSQL (v15 o superior):** Almacenamiento robusto y estructurado de datos relacionales utilizando el adaptador nativo **psycopg**.
-* <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" /> **Supabase / Render:** Plataformas en la nube empleadas como instancias para el alojamiento gestionado de la base de datos y hosting PaaS.
-
-### 📩 Notificaciones y Agente Local
-* <img src="https://shields.io" /> **API de bots de Telegram:** Integración directa para el envío inmediato de alertas y eventos al celular.
-* <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" /> **Agente de Monitoreo:** Script ligero en Python utilizando la librería **psutil** para extraer las métricas de hardware del sistema operativo de destino.
-
----
 ### Estructura del repositorio
 
 ```
@@ -84,26 +65,6 @@ frontend/
     ├── componentes/     # Tablas, gráficos y menú de ajustes
     └── services/        # Llamadas al backend
 ```
-
----
-
-## 🧠 Arquitectura y Esquema de Base de Datos
-
-El modelo relacional está compuesto por las siguientes entidades principales:
-* **USUARIOS:** Almacena credenciales de acceso y datos de vinculación con Telegram.
-* **PROCESOS:** Registra el nombre y estado de los servicios monitoreados.
-* **USUARIOS_PROCESOS:** Tabla intermedia que resuelve la relación de muchos a muchos entre usuarios y procesos.
-* **HISTORIAL:** Entidad vinculada para registrar secuencialmente las métricas de consumo de RAM y CPU en el tiempo.
-* **ALERTAS y EVENTOS:** Configuran los límites de caídas o consumo y almacenan el historial de notificaciones emitidas.
-
----
-
-## 📸 Prototipado y Diseño (Figma)
-
-El maquetado visual de la aplicación web se diseñó bajo una estética de alta densidad de información (*Slate Code*), incorporando:
-* **Tabla de Procesos:** Listado de servicios con PID, CPU, Memoria y códigos de color por estado (`NORMAL`, `WARNING`, `CRITICAL`).
-* **Inspector de Detalles:** Panel con estructura de árbol para examinar reportes del kernel, contexto del SO y descriptores de red/sockets.
-* **Gráficos de Métricas y Consola de Eventos:** Barras de progreso de carga por núcleo de CPU, uso de RAM
 
 ---
 
@@ -268,5 +229,3 @@ El código de vinculación vence a los 10 minutos.
 | El link de Telegram abre una cuenta que no es el bot | `TELEGRAM_BOT_USUARIO` tiene el nombre visible del bot en vez de su usuario (el que termina en `bot`). |
 | No llegan eventos aunque se supere un umbral | La alerta ya estaba disparada (mismo incidente). Bajá el consumo por debajo del límite, o editá la alerta con `PUT /alertas/{id}` (desde `/docs`) para que se reevalúe. |
 | Un cambio en el código del frontend no se refleja | Recargá con Ctrl+F5 o reiniciá `npm run dev`. |
-
-
