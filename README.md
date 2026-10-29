@@ -1,8 +1,30 @@
-# SysMonitor — Monitoreo de procesos del servidor
+<p align="center">
+  <img src="https://github.com/AngelesBlagine/TSO-netbooks/blob/1c3faeea3387298c86c0612e24b2c533b1967ce7/logoUNO/BANNER-UNO-LOGO.png" alt="Banner del Proyecto">
+</p>
 
-Proyecto de Programación Orientada a Objetos III.
+<h1 align="center">📊 Sistema de Monitoreo de Procesos y Servidores (SysMonitor)</h1>
 
-SysMonitor es una aplicación web que monitorea en tiempo real los procesos y el consumo de recursos (CPU y RAM) de la máquina donde corre el backend, y avisa cuando se superan umbrales configurados o cuando se cae un proceso, tanto en la web como por Telegram.
+<p align="center">
+  <i>Una plataforma web ligera y un agente de monitoreo 24/7 para el control de procesos críticos con alertas proactivas en tiempo real vía Telegram.</i>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Estado-En%20Desarrollo-success?style=for-the-badge" alt="Estado">
+  <img src="https://img.shields.io/badge/Versión-1.0-blue?style=for-the-badge" alt="Versión">
+  <img src="https://img.shields.io/badge/Licencia-MIT-orange?style=for-the-badge" alt="Licencia">
+</p>
+
+---
+
+> 🎓 **Proyecto Académico**  
+> Este proyecto es desarrollado por el **Grupo 3** para la cátedra de **Programación Orientada a Objetos** de la **Universidad Nacional del Oeste (UNO)**, ubicada en la Provincia de Buenos Aires, Argentina. Su propósito es ofrecer una solución ágil y directa para supervisar servicios críticos y evitar caídas imprevistas.
+
+> **Integrantes del Grupo 3:**
+> * Agustín Calpe Monzón
+> * Federico Jiménez
+> * Abril Ruiz Blagine
+> * Camila Vera
+> * Diego Salvatierra
 
 ---
 
@@ -16,19 +38,6 @@ SysMonitor es una aplicación web que monitorea en tiempo real los procesos y el
 - **Eventos:** cada vez que una alerta se dispara se registra un evento. Se ven en la sección *Alertas*, se pueden **reconocer** (marcar que alguien se está ocupando) y un Administrador los puede eliminar.
 - **Notificaciones por Telegram:** cada usuario puede vincular su Telegram desde *Ajustes → Perfil* y recibe los eventos en su celular.
 - **Gestión de miembros y roles** en *Ajustes → Roles*.
-
-### Roles
-
-| Acción | Administrador | Operador de Guardia | Visualizador |
-|---|:---:|:---:|:---:|
-| Ver procesos, alertas y eventos | ✅ | ✅ | ✅ |
-| Reconocer eventos | ✅ | ✅ | ✅ |
-| Vincular su Telegram y recibir alertas | ✅ | ✅ | ✅ |
-| Crear, editar y borrar alertas / umbrales globales | ✅ | ❌ | ❌ |
-| Eliminar eventos | ✅ | ❌ | ❌ |
-| Cambiar el rol de otros miembros | ✅ | ❌ | ❌ |
-
-Todo usuario nuevo se registra como **Visualizador**. Los administradores se asignan a mano en la base de datos (ver [Crear un administrador](#4-crear-un-administrador)).
 
 ---
 
@@ -58,6 +67,22 @@ frontend/
 ```
 
 ---
+
+### Roles
+
+| Acción | Administrador | Operador de Guardia | Visualizador |
+|---|:---:|:---:|:---:|
+| Ver procesos, alertas y eventos | ✅ | ✅ | ✅ |
+| Reconocer eventos | ✅ | ✅ | ✅ |
+| Vincular su Telegram y recibir alertas | ✅ | ✅ | ✅ |
+| Crear, editar y borrar alertas / umbrales globales | ✅ | ❌ | ❌ |
+| Eliminar eventos | ✅ | ❌ | ❌ |
+| Cambiar el rol de otros miembros | ✅ | ❌ | ❌ |
+
+Todo usuario nuevo se registra como **Visualizador**. Los administradores se asignan a mano en la base de datos (ver [Crear un administrador](#4-crear-un-administrador)).
+
+---
+
 
 ## Requisitos previos
 
