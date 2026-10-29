@@ -78,24 +78,3 @@ export async function obtenerProcesosSistema() {
     return { success: false, data: [], error: error.message, cpuTotal: 0.0, ramTotal: 0.0 };
   }
 }
-
-// Búsqueda de proceso por nombre conectada al backend
-export async function buscarProcesoPorNombre(nombre) {
-  const tagsMap = getStoredTags();
-  try {
-    const response = await fetch(`${API_URL}/procesos/sistema/buscar?nombre=${encodeURIComponent(nombre)}`);
-    const data = await response.json();
-
-    if (response.ok && data.data) {
-      const p = data.data;
-      return { 
-        success: true, 
-        data: [{ ...p, tags: tagsMap[p.name] || [] }] 
-      };
-    } else {
-      return { success: false, data: [] };
-    }
-  } catch (error) {
-    return { success: false, data: [], error: error.message };
-  }
-}

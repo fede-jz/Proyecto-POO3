@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     pool.open(wait=True)
-    app.state.procesos_cache = []
+    app.state.procesos_cache = {"procesos": [], "cpuTotal": 0.0, "ramTotal": 0.0}
     worker_task = asyncio.create_task(procesos_controller.guardar_procesos_en_cache(app))
     try:
         yield

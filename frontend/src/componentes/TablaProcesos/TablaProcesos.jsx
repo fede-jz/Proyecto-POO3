@@ -1,5 +1,4 @@
 import React, { useState, useId } from 'react';
-import { buscarProcesoPorNombre } from '../../services/procesos';
 import './TablaProcesos.css';
 
 const ELEMENTOS_POR_PAGINA = 10;
@@ -25,8 +24,6 @@ export const TablaProcesos = ({
   procesoSeleccionado,
 }) => {
   const [busqueda, setBusqueda] = useState('');
-  const [procesosFiltradosApi, setProcesosFiltradosApi] = useState(null);
-  const [cargandoBusqueda, setCargandoBusqueda] = useState(false);
 
   // Filtros de visualización derivados de la selección
   const [soloSeleccionados, setSoloSeleccionados] = useState(false);
@@ -43,30 +40,6 @@ export const TablaProcesos = ({
   // Paginación estilo Gmail
   const [paginaActual, setPaginaActual] = useState(1);
   const selectAllId = useId();
-
-  // Búsqueda por nombre (Enter)
-  const handleKeyDown = async (e) => {
-    if (e.key === 'Enter') {
-      const termino = busqueda.trim();
-
-      if (!termino) {
-        setProcesosFiltradosApi(null);
-        setPaginaActual(1);
-        return;
-      }
-
-      setCargandoBusqueda(true);
-      const resultado = await buscarProcesoPorNombre(termino);
-
-      if (resultado.success) {
-        setProcesosFiltradosApi(resultado.data);
-      } else {
-        setProcesosFiltradosApi([]);
-      }
-      setCargandoBusqueda(false);
-      setPaginaActual(1);
-    }
-  };
 
   // Manejo de clic en encabezados para ordenamiento con exclusividad
   const handleHeaderClick = (columna) => {
@@ -86,8 +59,11 @@ export const TablaProcesos = ({
     return '▲';
   };
 
-  // Base de datos filtrada por búsqueda API o lista general
-  let listaBase = procesosFiltradosApi !== null ? procesosFiltradosApi : processes;
+  // Búsqueda por nombre: coincidencia parcial sin distinguir mayúsculas, se actualiza con cada refresco de la lista
+  const termino = busqueda.trim().toLowerCase();
+  let listaBase = termino
+    ? processes.filter((p) => p.name.toLowerCase().includes(termino))
+    : processes;
 
   // Filtro por selección (si el usuario activa "Mostrar solo seleccionados" u "Ocultar desmarcados")
   if (soloSeleccionados || ocultarDesmarcados) {
@@ -192,17 +168,12 @@ export const TablaProcesos = ({
         <div className="controles-filtro">
           <input
             type="text"
-            placeholder="Buscar exacto + Enter..."
+            placeholder="Buscar proceso..."
             value={busqueda}
             onChange={(e) => {
-              const nuevoValor = e.target.value;
-              setBusqueda(nuevoValor);
+              setBusqueda(e.target.value);
               setPaginaActual(1);
-              if (nuevoValor.trim() === '') {
-                setProcesosFiltradosApi(null);
-              }
             }}
-            onKeyDown={handleKeyDown}
             className="input-busqueda"
           />
         </div>
@@ -422,13 +393,7 @@ export const TablaProcesos = ({
             </tr>
           </thead>
           <tbody>
-            {cargandoBusqueda ? (
-              <tr>
-                <td colSpan={6} className="sin-resultados">
-                  Buscando proceso ...
-                </td>
-              </tr>
-            ) : procesosAMostrar.length > 0 ? (
+            {procesosAMostrar.length > 0 ? (
               procesosAMostrar.map((proc, index) => {
                 const estaSeleccionado = selectedProcessNames.includes(proc.name);
                 const esInspeccionado = procesoSeleccionado?.name === proc.name;
@@ -503,7 +468,7 @@ export const TablaProcesos = ({
               <tr>
                 <td colSpan={6} className="sin-resultados">
                   {busqueda
-                    ? `No se encontró el proceso exacto "${busqueda}" en el sistema`
+                    ? `No se encontró ningún proceso que contenga "${busqueda}"`
                     : soloSeleccionados
                     ? 'No hay procesos seleccionados en este momento'
                     : 'No hay procesos disponibles'}

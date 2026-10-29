@@ -29,7 +29,14 @@ def _agrupar_procesos_por_nombre(procesos):
 async def guardar_procesos_en_cache(app: FastAPI):
     print("Worker iniciado")
     while True:
-        app.state.procesos_cache = _agrupar_procesos_por_nombre(listar_procesos_sistema())
+        # El escaneo espera 0.5s para medir la CPU; se corre en otro hilo para no bloquear las peticiones de la API
+        procesos = await asyncio.to_thread(listar_procesos_sistema)
+        app.state.procesos_cache = {
+            "procesos": _agrupar_procesos_por_nombre(procesos),
+            # Uso total del servidor desde la medición anterior (la primera vuelta siempre da 0)
+            "cpuTotal": psutil.cpu_percent(),
+            "ramTotal": psutil.virtual_memory().percent,
+        }
         await asyncio.sleep(5)
 
 def listar_procesos_sistema():
@@ -44,8 +51,8 @@ def listar_procesos_sistema():
     procesos = []
     cant_nucleos = psutil.cpu_count() or 1
     for p in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
-        # Ignora el proceso del sistema que da valores raros
-        if p.info['pid'] == 0:
+        # Ignora el proceso del sistema que da valores raros y los procesos protegidos cuyo nombre no se puede leer
+        if p.info['pid'] == 0 or not p.info['name']:
             continue
         procesos.append({
             'pid': p.info['pid'],
