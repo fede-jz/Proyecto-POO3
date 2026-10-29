@@ -15,3 +15,9 @@ def buscar_por_id(conn, proceso_id):
 
 def listar(conn):
     return conn.execute("SELECT * FROM procesos").fetchall()
+
+def actualizar_estado(conn, proceso_id, estado):
+    return conn.execute(
+        "UPDATE procesos SET estado = %s WHERE id = %s RETURNING *",
+        (estado, proceso_id)
+    ).fetchone()

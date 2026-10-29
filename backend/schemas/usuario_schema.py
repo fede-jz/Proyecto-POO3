@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
@@ -34,13 +34,29 @@ class UsuarioLogin(BaseModel):
         return v_limpio
 
 
+# Roles admitidos, iguales al CHECK ck_usuarios_rol de la BBDD
+RolUsuario = Literal["Administrador", "Operador de Guardia", "Visualizador"]
+
+
 class UsuarioOut(BaseModel):
     id: UUID
     email: str
     nombre: str
+    rol: RolUsuario
+    telegram_chat_id: Optional[int] = None   # None = no vinculó Telegram
     creado_en: datetime
 
 
+class TelegramCodigoOut(BaseModel):
+    codigo: str
+    bot: str             # usuario del bot, para armar el link t.me/<bot>?start=<codigo>
+    expira_en: datetime
+
+
 class UsuarioLoginResponse(BaseModel):
-    token: str
+    access_token: str
     usuario: UsuarioOut
+
+
+class UsuarioActualizarRol(BaseModel):
+    rol: RolUsuario
