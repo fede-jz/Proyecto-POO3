@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
@@ -43,7 +43,14 @@ class UsuarioOut(BaseModel):
     email: str
     nombre: str
     rol: RolUsuario
+    telegram_chat_id: Optional[int] = None   # None = no vinculó Telegram
     creado_en: datetime
+
+
+class TelegramCodigoOut(BaseModel):
+    codigo: str
+    bot: str             # usuario del bot, para armar el link t.me/<bot>?start=<codigo>
+    expira_en: datetime
 
 
 class UsuarioLoginResponse(BaseModel):

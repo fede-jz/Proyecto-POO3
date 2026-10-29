@@ -1,8 +1,9 @@
 import asyncio
 import os
+import threading
 from contextlib import asynccontextmanager
 from db import pool
-from controllers import procesos_controller
+from controllers import procesos_controller, telegram_controller
 from routers import procesos_router, auth_router, alertas_router, usuarios_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,10 +15,14 @@ async def lifespan(app: FastAPI):
     pool.open(wait=True)
     app.state.procesos_cache = {"procesos": [], "cpuTotal": 0.0, "ramTotal": 0.0}
     worker_task = asyncio.create_task(procesos_controller.guardar_procesos_en_cache(app))
+    # Bot de Telegram en un hilo aparte (recibe los /start y /vincular de los usuarios)
+    detener_bot = threading.Event()
+    telegram_controller.iniciar_bot(detener_bot)
     try:
         yield
-    finally: 
-        # Al apagar el servidor cerramos la pool y cancelamos la tarea del worker
+    finally:
+        # Al apagar el servidor frenamos el bot, cerramos la pool y cancelamos la tarea del worker
+        detener_bot.set()
         pool.close()
         worker_task.cancel()
         await asyncio.gather(worker_task, return_exceptions=True)
