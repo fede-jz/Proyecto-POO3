@@ -105,6 +105,35 @@ def buscar_evento_por_id(conn, evento_id):
         (evento_id,)
     ).fetchone()
 
+def buscar_por_id(conn, alerta_id):
+    return conn.execute(
+        """
+        SELECT a.*, p.nombre AS nombre_proceso
+        FROM alertas a
+        LEFT JOIN procesos p ON p.id = a.proceso_id
+        WHERE a.id = %s
+        """,
+        (alerta_id,)
+    ).fetchone()
+
+def actualizar(conn, alerta_id, valor_limite, activo, reiniciar_disparo):
+    # Los valores en None no se cambian. reiniciar_disparo pone disparada en FALSE para que el monitor la reevalúe
+    return conn.execute(
+        """
+        UPDATE alertas
+        SET valor_limite = COALESCE(%s, valor_limite),
+            activo = COALESCE(%s, activo),
+            disparada = CASE WHEN %s THEN FALSE ELSE disparada END
+        WHERE id = %s
+        RETURNING id
+        """,
+        (valor_limite, activo, reiniciar_disparo, alerta_id)
+    ).fetchone()
+
+def eliminar(conn, alerta_id):
+    # Por el ON DELETE CASCADE también se borran sus eventos
+    return conn.execute("DELETE FROM alertas WHERE id = %s RETURNING id", (alerta_id,)).fetchone()
+
 def listar(conn):
     # Primero las globales (sin proceso) y después las de cada proceso
     return conn.execute(

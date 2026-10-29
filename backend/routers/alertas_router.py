@@ -33,3 +33,16 @@ def eliminar_evento(evento_id: UUID, current_user: dict = Depends(auth_controlle
 @router.post("/", response_model=alerta_schema.AlertaOut, status_code=201)
 def crear_alerta(data: alerta_schema.AlertaCreate, current_user: dict = Depends(auth_controller.requerir_administrador)):
     return alertas_controller.crear_alerta_db(current_user["id"], data)
+
+# Las rutas con {alerta_id} van al final para que no capturen /globales ni /eventos
+@router.get("/{alerta_id}", response_model=alerta_schema.AlertaOut)
+def obtener_alerta(alerta_id: UUID, current_user: dict = Depends(auth_controller.get_current_user_dependency)):
+    return alertas_controller.obtener_alerta_db(alerta_id)
+
+@router.put("/{alerta_id}", response_model=alerta_schema.AlertaOut)
+def actualizar_alerta(alerta_id: UUID, data: alerta_schema.AlertaUpdate, current_user: dict = Depends(auth_controller.requerir_administrador)):
+    return alertas_controller.actualizar_alerta_db(alerta_id, data)
+
+@router.delete("/{alerta_id}")
+def eliminar_alerta(alerta_id: UUID, current_user: dict = Depends(auth_controller.requerir_administrador)):
+    return alertas_controller.eliminar_alerta_db(alerta_id)

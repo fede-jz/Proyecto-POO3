@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 from psycopg.errors import UniqueViolation
 from repositories import alertas_repositorio, procesos_repositorio
-from schemas.alerta_schema import AlertaCreate, AlertasGlobalesUpdate
+from schemas.alerta_schema import AlertaCreate, AlertaUpdate, AlertasGlobalesUpdate
 from uuid import UUID
 from db import pool
 
@@ -13,6 +13,53 @@ def listar_alertas_db() -> list[dict]:
     """
     with pool.connection() as conn:
         return alertas_repositorio.listar(conn)
+
+def obtener_alerta_db(alerta_id: UUID) -> dict:
+    """
+    Obtiene una alerta a través de su ID.
+    """
+    with pool.connection() as conn:
+        alerta = alertas_repositorio.buscar_por_id(conn, alerta_id)
+    if not alerta:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="La alerta no existe."
+        )
+    return alerta
+
+def actualizar_alerta_db(alerta_id: UUID, data: AlertaUpdate) -> dict:
+    """
+    Cambia el límite y/o activa o desactiva una alerta.
+    Si cambia el límite o se desactiva, se reinicia su estado de disparo para que el monitor la vuelva a evaluar.
+    """
+    with pool.connection() as conn:
+        alerta = alertas_repositorio.buscar_por_id(conn, alerta_id)
+        if not alerta:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="La alerta no existe."
+            )
+        # Replica el CHECK ck_alertas_valor_limite para devolver un error claro en vez de uno de Postgres
+        if alerta["tipo"] == "caida" and data.valor_limite is not None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Las alertas de tipo 'caida' no llevan valor_limite."
+            )
+        reiniciar_disparo = data.valor_limite is not None or data.activo is False
+        alertas_repositorio.actualizar(conn, alerta_id, data.valor_limite, data.activo, reiniciar_disparo)
+        return alertas_repositorio.buscar_por_id(conn, alerta_id)
+
+def eliminar_alerta_db(alerta_id: UUID) -> dict:
+    """
+    Elimina una alerta junto con todos sus eventos.
+    """
+    with pool.connection() as conn:
+        if not alertas_repositorio.eliminar(conn, alerta_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="La alerta no existe."
+            )
+    return {"mensaje": "Alerta eliminada."}
 
 def obtener_alertas_globales_db() -> dict:
     """

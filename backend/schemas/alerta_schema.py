@@ -32,6 +32,18 @@ class AlertaCreate(BaseModel):
         return self
 
 
+class AlertaUpdate(BaseModel):
+    # Campos opcionales: solo se cambia lo que venga. El tipo y el proceso no se editan (se borra y se crea otra)
+    valor_limite: Optional[float] = Field(None, ge=0, le=100, description="Nuevo porcentaje límite (no aplica a 'caida')")
+    activo: Optional[bool] = Field(None, description="Activar o desactivar la alerta sin borrarla")
+
+    @model_validator(mode="after")
+    def validar_algun_cambio(self):
+        if self.valor_limite is None and self.activo is None:
+            raise ValueError("Hay que indicar valor_limite o activo.")
+        return self
+
+
 class AlertasGlobalesUpdate(BaseModel):
     cpu: float = Field(..., ge=0, le=100, description="Porcentaje límite de CPU de todo el servidor")
     ram: float = Field(..., ge=0, le=100, description="Porcentaje límite de RAM de todo el servidor")
