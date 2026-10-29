@@ -108,7 +108,8 @@ class auth_controller:
         1. Escapa caracteres especiales en el correo electrónico.
         2. Verifica si el usuario existe en la base de datos.
         3. Verifica si la contraseña provista coincide con el hash almacenado.
-        4. Retorna la información del usuario autenticado (sin el hash de la contraseña).
+        4. Genera el JWT del usuario.
+        5. Retorna el token junto con la información del usuario autenticado (sin el hash de la contraseña).
         """
 
         # 1. Escapar caracteres especiales y normalizar correo
@@ -118,26 +119,27 @@ class auth_controller:
         usuario = cls.obtener_usuario_por_email(email_sanitizado)
         if not usuario or not cls.verificar_contrasenia(data.contrasenia, usuario["contrasenia_hash"]):
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"El correo electrónico o la contraseña son incorrectos."
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="El correo electrónico o la contraseña son incorrectos."
             )
 
-        # 3. Retornar información del usuario sin exponer el hash de la contraseña
-        usuario_seguro = {k: v for k, v in usuario.items() if k != "contrasenia_hash"}
-        return usuario_seguro
-
-    @staticmethod
-    def crear_token(usuario: dict) -> str:
-        """Genera un JWT con la información mínima del usuario."""
-        expiracion = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
+        # 3. Generar el JWT con la información mínima del usuario
+        ahora = datetime.now(timezone.utc)
         payload = {
             "sub": str(usuario["id"]),
             "email": usuario["email"],
             "nombre": usuario["nombre"],
-            "exp": expiracion,
-            "iat": datetime.now(timezone.utc),
+            "exp": ahora + timedelta(minutes=JWT_EXPIRE_MINUTES),
+            "iat": ahora,
         }
-        return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+        token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+        # 4. Retornar el token y la información del usuario sin exponer el hash de la contraseña
+        usuario_seguro = {k: v for k, v in usuario.items() if k != "contrasenia_hash"}
+        return {
+            "access_token": token,
+            "usuario": usuario_seguro,
+        }
 
     @classmethod
     def obtener_usuario_por_id(cls, usuario_id: str) -> dict | None:
