@@ -85,7 +85,7 @@ export const MenuRoles = ({
 
       {/* Indicador de carga dinámico */}
       {cargandoMiembros && (
-        <div style={{ padding: '0.75rem', textAlign: 'center', color: '#38bdf8', fontSize: '0.9rem', background: 'rgba(56, 189, 248, 0.1)', borderRadius: '6px', marginBottom: '1rem' }}>
+        <div style={{ padding: '0.75rem', textAlign: 'center', color: 'var(--accent-cyan)', fontSize: '0.9rem', background: 'color-mix(in srgb, var(--accent-cyan) 10%, transparent)', borderRadius: '6px', marginBottom: '1rem' }}>
           ⏳ Sincronizando miembros desde la base de datos...
         </div>
       )}

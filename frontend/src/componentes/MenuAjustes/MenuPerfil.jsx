@@ -76,8 +76,8 @@ export const MenuPerfil = ({
         )}
 
         {!usuario?.telegram_chat_id && (
-          <div style={{ marginTop: '1rem', padding: '1rem', background: '#0f172a', borderRadius: '6px' }}>
-            <p style={{ fontSize: '0.85rem', marginBottom: '0.75rem', color: '#cbd5e1' }}>
+          <div style={{ marginTop: '1rem', padding: '1rem', background: 'var(--bg-sunken)', borderRadius: '6px' }}>
+            <p style={{ fontSize: '0.85rem', marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>
               Conectá tu cuenta para recibir alertas automáticas en tu teléfono.
             </p>
             {!codigoTelegram ? (
@@ -96,15 +96,15 @@ export const MenuPerfil = ({
                 >
                   📲 Abrir Telegram y tocar "Iniciar"
                 </a>
-                <p style={{ fontSize: '0.8rem', color: '#38bdf8', marginTop: '0.75rem' }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--accent-cyan)', marginTop: '0.75rem' }}>
                   ¿No se abrió o usás Telegram en otro dispositivo? Buscá a{' '}
-                  <a href={`https://t.me/${codigoTelegram.bot}`} target="_blank" rel="noreferrer" style={{ color: '#fff' }}>@{codigoTelegram.bot}</a>{' '}
+                  <a href={`https://t.me/${codigoTelegram.bot}`} target="_blank" rel="noreferrer" style={{ color: 'var(--text-strong)' }}>@{codigoTelegram.bot}</a>{' '}
                   y enviale:
                 </p>
-                <div className="font-mono" style={{ background: '#1e293b', padding: '0.5rem', borderRadius: '4px', color: '#4ade80', margin: '0.5rem 0' }}>
+                <div className="font-mono" style={{ background: 'var(--bg-hover)', padding: '0.5rem', borderRadius: '4px', color: 'var(--accent-green)', margin: '0.5rem 0' }}>
                   /vincular {codigoTelegram.codigo}
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>El código vence en 10 minutos.</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>El código vence en 10 minutos.</p>
                 <button
                   type="button"
                   onClick={handleVerificarVinculacion}
