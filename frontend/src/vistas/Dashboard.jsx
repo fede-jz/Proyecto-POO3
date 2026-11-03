@@ -59,24 +59,26 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
   const tagsMapRef = useRef(tagsMap);
   tagsMapRef.current = tagsMap;
 
-  // Umbrales dinámicos (con setter para actualizar en tiempo real)
-  const [umbralAdvertencia, setUmbralAdvertencia] = useState(80);
-  const [umbralCritico] = useState(90);
+  // Umbrales globales del servidor: cada tarjeta muestra el suyo (null = no hay alerta global de ese tipo)
+  const [umbralCpu, setUmbralCpu] = useState(null);
+  const [umbralRam, setUmbralRam] = useState(null);
 
-  // Cargar el umbral personalizado del usuario al iniciar el dashboard
+  // Cargar los umbrales globales al iniciar el dashboard
   useEffect(() => {
-    async function cargarUmbralesUsuario() {
+    async function cargarUmbralesGlobales() {
       const umbrales = await obtenerMisUmbralesService();
-      if (umbrales && umbrales.cpu) {
-        setUmbralAdvertencia(umbrales.cpu);
+      if (umbrales) {
+        setUmbralCpu(umbrales.cpu ?? null);
+        setUmbralRam(umbrales.ram ?? null);
       }
     }
-    cargarUmbralesUsuario();
+    cargarUmbralesGlobales();
   }, []);
 
-  // Función que actualiza el gráfico de polígonos al guardar en ajustes
+  // Al guardar los umbrales en Ajustes se actualizan las líneas de las tarjetas
   const handleUmbralesActualizados = (nuevosUmbrales) => {
-    setUmbralAdvertencia(nuevosUmbrales.cpu);
+    setUmbralCpu(nuevosUmbrales.cpu);
+    setUmbralRam(nuevosUmbrales.ram);
   };
 
   // Función para obtener los eventos y reglas reales del servidor
@@ -214,11 +216,6 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
     );
   };
 
-  const handleActualizarAlerta = (alertaActualizada) => {
-    const actualizadas = alertas.map((a) => (a.id === alertaActualizada.id ? alertaActualizada : a));
-    setAlertas(actualizadas);
-  };
-
   const handleMarcarReconocidas = async (ids) => {
     for (const idFormateado of ids) {
       const alertaEncontrada = alertas.find((a) => a.id === idFormateado);
@@ -283,6 +280,12 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
     });
   };
 
+  // Para la tarjeta de procesos: cuántos de los monitoreados están corriendo ahora
+  const nombresEnEjecucion = new Set(procesos.map((p) => normalizarNombreProceso(p.name)));
+  const monitoreadosEnEjecucion = procesosMonitoreados.filter((p) =>
+    nombresEnEjecucion.has(normalizarNombreProceso(p.nombre))
+  ).length;
+
   const handleCerrarGraficoAmpliado = useCallback(() => setGraficoAmpliado(null), []);
 
   // Con "Analizar selección" activo, las tarjetas muestran la suma de los procesos seleccionados
@@ -316,15 +319,6 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
         conteoAlertasNoReconocidas={conteoAlertasNoReconocidas}
       />
 
-      <div className="pm-user-bar">
-        <span className="pm-user-info">
-          Sesión activa: <strong className="pm-user-highlight">{usuario?.nombre || usuario?.email}</strong>
-        </span>
-        <button onClick={onCerrarSesion} className="pm-btn-logout">
-          Cerrar sesión
-        </button>
-      </div>
-
       <main className="main-content">
         {vistaActiva === 'procesos' && (
           <>
@@ -347,8 +341,7 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
                 unit="%"
                 valores={historialMuestras.map((m) => m.cpu)}
                 serie="cpu"
-                umbralAdvertencia={umbralAdvertencia}
-                umbralCritico={umbralCritico}
+                umbral={umbralCpu}
                 etiquetaFiltro={etiquetaFiltro}
                 onAmpliar={() => setGraficoAmpliado('cpu')}
               />
@@ -358,14 +351,17 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
                 unit="%"
                 valores={historialMuestras.map((m) => m.ram)}
                 serie="ram"
-                umbralAdvertencia={umbralAdvertencia}
-                umbralCritico={umbralCritico}
+                umbral={umbralRam}
                 etiquetaFiltro={etiquetaFiltro}
                 onAmpliar={() => setGraficoAmpliado('ram')}
               />
               <TarjetaMetrica
                 title="Procesos Únicos"
                 value={totalProcesosAgrupados}
+                detalles={[
+                  { etiqueta: 'Monitoreados', valor: procesosMonitoreados.length },
+                  { etiqueta: 'Monitoreados en ejecución', valor: monitoreadosEnEjecucion },
+                ]}
                 subtitle={`Actualizado: ${horaServidor}`}
               />
             </section>
@@ -375,8 +371,8 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
               <PoligonoRecursos
                 key={graficoAmpliado}
                 historial={historialMuestras}
-                umbralAdvertencia={umbralAdvertencia}
-                umbralCritico={umbralCritico}
+                umbralCpu={umbralCpu}
+                umbralRam={umbralRam}
                 filtroProcesosNombres={polygonFilteredNames}
                 onRestablecerFiltro={handleResetPolygonFilter}
                 metricaInicial={graficoAmpliado}
@@ -426,7 +422,6 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
         {vistaActiva === 'alertas' && (
           <TablaAlertas
             alertas={alertas}
-            onActualizarAlerta={handleActualizarAlerta}
             onMarcarReconocidas={handleMarcarReconocidas}
             onEliminarAlerta={handleEliminarAlerta}
             esAdmin={esAdministrador}
@@ -437,12 +432,9 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
       <MenuAjustes
         abierto={menuAjustesAbierto}
         onCerrar={() => setMenuAjustesAbierto(false)}
-        procesos={procesos}
         onActualizarUsuario={onActualizarUsuario}
-        reglasAlertas={reglasAlertas}
-        cpuTotal={cpuTotal}
-        ramTotal={ramTotal}
         usuario={usuario}
+        onCerrarSesion={onCerrarSesion}
         onUmbralesActualizados={handleUmbralesActualizados}
       />
     </div>

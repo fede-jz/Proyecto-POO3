@@ -10,10 +10,6 @@
   gap: 20px;
 }
 
-.pm-login-card .pm-form-options {
-  margin-top: -2px;
-}
-
 /* Estilo para el botón tipo enlace que cambia de vista en la SPA */
 .pm-switch-button {
   background: none;

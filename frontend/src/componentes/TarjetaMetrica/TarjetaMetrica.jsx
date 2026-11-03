@@ -6,7 +6,8 @@ const ALTO = 56;
 
 /**
  * Tarjeta de métrica. Si recibe `valores` (porcentajes de las últimas muestras) muestra además
- * un mini-gráfico con las líneas de umbral y el máximo y promedio; al hacer clic se puede ampliar.
+ * un mini-gráfico con la línea de su umbral y el máximo y promedio; al hacer clic se puede ampliar.
+ * Con `detalles` ([{ etiqueta, valor }]) muestra datos extra debajo del valor.
  */
 export const TarjetaMetrica = ({
   title,
@@ -15,8 +16,8 @@ export const TarjetaMetrica = ({
   subtitle,
   valores,
   serie = 'cpu',
-  umbralAdvertencia,
-  umbralCritico,
+  umbral,
+  detalles,
   etiquetaFiltro,
   onAmpliar,
 }) => {
@@ -45,11 +46,8 @@ export const TarjetaMetrica = ({
       {conGrafico && (
         <>
           <svg className="metric-sparkline" viewBox={`0 0 ${ANCHO} ${ALTO}`} preserveAspectRatio="none" aria-hidden="true">
-            {umbralAdvertencia != null && (
-              <line x1="0" x2={ANCHO} y1={getY(umbralAdvertencia)} y2={getY(umbralAdvertencia)} className="sparkline-umbral advertencia" />
-            )}
-            {umbralCritico != null && (
-              <line x1="0" x2={ANCHO} y1={getY(umbralCritico)} y2={getY(umbralCritico)} className="sparkline-umbral critico" />
+            {umbral != null && (
+              <line x1="0" x2={ANCHO} y1={getY(umbral)} y2={getY(umbral)} className="sparkline-umbral" />
             )}
             {area && <polygon points={area} className={`sparkline-area ${serie}`} />}
             {cantidad > 0 && <polyline points={puntos} fill="none" className={`sparkline-linea ${serie}`} />}
@@ -57,9 +55,20 @@ export const TarjetaMetrica = ({
           <div className="metric-stats">
             <span>Máx: <strong>{maximo}%</strong></span>
             <span>Prom: <strong>{promedio}%</strong></span>
-            <span className="metric-muestras">últimas {cantidad} muestras</span>
+            {umbral != null && <span className="metric-umbral">Umbral: <strong>{Number(umbral).toFixed(0)}%</strong></span>}
           </div>
         </>
+      )}
+
+      {Array.isArray(detalles) && detalles.length > 0 && (
+        <dl className="metric-detalles">
+          {detalles.map((d) => (
+            <div key={d.etiqueta} className="metric-detalle">
+              <dt>{d.etiqueta}</dt>
+              <dd>{d.valor}</dd>
+            </div>
+          ))}
+        </dl>
       )}
 
       {subtitle && <span className="metric-subtitle">{subtitle}</span>}

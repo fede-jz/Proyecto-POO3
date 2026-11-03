@@ -7,8 +7,8 @@ import './PoligonoRecursos.css';
  */
 export const PoligonoRecursos = ({
   historial = [],
-  umbralAdvertencia = 80,
-  umbralCritico = 90,
+  umbralCpu = null,
+  umbralRam = null,
   filtroProcesosNombres = null,
   onRestablecerFiltro,
   metricaInicial = 'ambas',
@@ -27,6 +27,15 @@ export const PoligonoRecursos = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onCerrar]);
+
+  // Mientras el gráfico ampliado está abierto se oculta el scroll de la página de atrás
+  useEffect(() => {
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+    };
+  }, []);
 
   const cantidadMuestras = historial.length;
   const cpuValores = historial.map((m) => m.cpu);
@@ -173,30 +182,36 @@ export const PoligonoRecursos = ({
               </linearGradient>
             </defs>
 
-            {/* Líneas de umbrales */}
-            <line
-              x1={padding}
-              y1={getY(umbralAdvertencia)}
-              x2={width - padding}
-              y2={getY(umbralAdvertencia)}
-              className="linea-umbral advertencia"
-            />
-            <line
-              x1={padding}
-              y1={getY(umbralCritico)}
-              x2={width - padding}
-              y2={getY(umbralCritico)}
-              className="linea-umbral critico"
-            />
-
-            {/* Texto de umbral en modo maximizado */}
-            {maximizado && (
+            {/* Umbral global de cada métrica visible (CPU en amarillo, RAM en verde, como sus líneas) */}
+            {umbralCpu != null && (metricaSeleccionada === 'cpu' || metricaSeleccionada === 'ambas') && (
               <>
-                <text x={width - padding - 85} y={getY(umbralCritico) - 5} className="label-umbral-critico">
-                  Crítico ({umbralCritico}%)
+                <line
+                  x1={padding}
+                  y1={getY(umbralCpu)}
+                  x2={width - padding}
+                  y2={getY(umbralCpu)}
+                  className="linea-umbral advertencia"
+                />
+                <text x={width - padding - 110} y={getY(umbralCpu) - 5} className="label-umbral-adv">
+                  Umbral CPU ({Number(umbralCpu).toFixed(0)}%)
                 </text>
-                <text x={width - padding - 105} y={getY(umbralAdvertencia) - 5} className="label-umbral-adv">
-                  Advertencia ({umbralAdvertencia}%)
+              </>
+            )}
+            {umbralRam != null && (metricaSeleccionada === 'ram' || metricaSeleccionada === 'ambas') && (
+              <>
+                <line
+                  x1={padding}
+                  y1={getY(umbralRam)}
+                  x2={width - padding}
+                  y2={getY(umbralRam)}
+                  className="linea-umbral umbral-ram"
+                />
+                <text
+                  x={width - padding - 110}
+                  y={getY(umbralRam) + (umbralCpu === umbralRam && metricaSeleccionada === 'ambas' ? 14 : -5)}
+                  className="label-umbral-ram"
+                >
+                  Umbral RAM ({Number(umbralRam).toFixed(0)}%)
                 </text>
               </>
             )}

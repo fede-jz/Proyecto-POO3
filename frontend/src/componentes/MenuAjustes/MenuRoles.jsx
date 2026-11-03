@@ -1,5 +1,3 @@
-import React from 'react';
-
 const ELEMENTOS_POR_PAGINA_ROLES = 10;
 
 export const MenuRoles = ({
@@ -64,26 +62,6 @@ export const MenuRoles = ({
 
   return (
     <div className="modulo-roles-miembros">
-      {/* Targeta con datos del Operador en Sesión Real */}
-      <div className="card-operador-activo">
-        <div className="operador-activo-left">
-          <div className="avatar-mini-operador">
-            {usuario?.nombre ? usuario.nombre.substring(0, 2).toUpperCase() : 'US'}
-          </div>
-          <div className="operador-textos">
-            <span className="operador-sub">Operador en sesión:</span>
-            <strong>{usuario?.nombre || 'Invitado'}</strong>
-          </div>
-        </div>
-
-        <div className="operador-rol-toggle">
-          <span className="label-simulacion">Rol asignado:</span>
-          <span className="badge-rol-admin" style={{ padding: '0.35rem 0.8rem', borderRadius: '4px', background: '#0284c7', color: '#fff', fontSize: '0.85rem', fontWeight: 'bold' }}>
-            {usuario?.rol || 'Visualizador'}
-          </span>
-        </div>
-      </div>
-
       {/* Banner Informativo y Botones de Acción (Condicionados a esAdmin) */}
       {!esAdmin ? (
         <div className="banner-permiso-solo-lectura">
@@ -143,6 +121,12 @@ export const MenuRoles = ({
       {/* Tabla de Miembros */}
       <div className="tabla-miembros-wrapper">
         <table className="tabla-miembros">
+          <colgroup>
+            {esAdmin && <col className="col-check-miembro" />}
+            <col className="col-usuario-miembro" />
+            <col className="col-rol-miembro" />
+            <col className="col-conexion-miembro" />
+          </colgroup>
           <thead>
             <tr>
               {esAdmin && (
@@ -181,8 +165,8 @@ export const MenuRoles = ({
                       <div className="usuario-celda">
                         <span className="avatar-iniciales">{m.avatarIniciales}</span>
                         <div className="usuario-textos-col">
-                          <span className="usuario-nombre">{m.nombre}</span>
-                          <span className="usuario-correo">{m.email}</span>
+                          <span className="usuario-nombre" title={m.nombre}>{m.nombre}</span>
+                          <span className="usuario-correo" title={m.email}>{m.email}</span>
                         </div>
                       </div>
                     </td>

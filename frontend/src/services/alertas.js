@@ -33,14 +33,13 @@ export async function obtenerDatosAlertas() {
       const esCaida = ev.tipo === 'caida';
       const valorNum = Number(ev.valor_detectado || 0);
       const tipoLegible = TIPOS_LEGIBLES[ev.tipo] || ev.tipo_evento;
-      const idCorto = String(ev.id || '00000000').slice(0, 8).toUpperCase();
       // Sin proceso = alerta global del servidor
       const procesoNombre = ev.nombre_proceso || 'Servidor (global)';
 
       return {
-        id: `EV-${idCorto}`,
+        // UUID completo del evento tal como está en la base (tabla eventos)
+        id: String(ev.id),
         eventoId: ev.id,
-        procesoId: ev.proceso_id ? `PID-${String(ev.proceso_id).slice(0, 4)}` : 'GLOBAL',
         procesoNombre: procesoNombre,
         tipo: tipoLegible,
         severidad: esCaida || valorNum > 90 ? 'Crítico' : valorNum > 85 ? 'Alto' : 'Medio',
@@ -48,7 +47,6 @@ export async function obtenerDatosAlertas() {
         fechaHora: ev.creado_en ? new Date(ev.creado_en).toLocaleString() : 'Fecha no disponible',
         valorDetectado: esCaida ? '—' : `${valorNum.toFixed(1)}%`,
         umbral: ev.valor_limite != null ? `${Number(ev.valor_limite).toFixed(1)}%` : '—',
-        observaciones: ev.observaciones || 'Evento registrado automáticamente por el monitor.',
         // Mismo formato que el mensaje que manda el backend (telegram_controller._armar_mensaje)
         mensajeTelegram: {
           entregado: ev.notificado,

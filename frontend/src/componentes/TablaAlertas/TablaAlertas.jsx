@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './TablaAlertas.css';
 
 const ELEMENTOS_POR_PAGINA = 10;
 
 export const TablaAlertas = ({
   alertas,
-  onActualizarAlerta,
   onMarcarReconocidas,
   onEliminarAlerta,
   esAdmin,
@@ -25,16 +24,6 @@ export const TablaAlertas = ({
 
   // Drawer lateral para detalle de alerta
   const [alertaSeleccionada, setAlertaSeleccionada] = useState(null);
-  const [observacionTemp, setObservacionTemp] = useState('');
-  const [mensajeGuardado, setMensajeGuardado] = useState(false);
-
-  // Sincronizar observaciones cuando cambia la alerta seleccionada
-  useEffect(() => {
-    if (alertaSeleccionada) {
-      setObservacionTemp(alertaSeleccionada.observaciones || '');
-      setMensajeGuardado(false);
-    }
-  }, [alertaSeleccionada]);
 
   // Cerrar drawer con Escape
   useEffect(() => {
@@ -52,7 +41,6 @@ export const TablaAlertas = ({
     const coincideTexto =
       a.id.toLowerCase().includes(busqueda.toLowerCase()) ||
       a.procesoNombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      a.procesoId.toLowerCase().includes(busqueda.toLowerCase()) ||
       a.tipo.toLowerCase().includes(busqueda.toLowerCase());
 
     const coincideSeveridad =
@@ -101,19 +89,6 @@ export const TablaAlertas = ({
     } else {
       setSeleccionados([...seleccionados, id]);
     }
-  };
-
-  // Guardar Observaciones
-  const handleGuardarObservaciones = () => {
-    if (!alertaSeleccionada) return;
-    const actualizada = {
-      ...alertaSeleccionada,
-      observaciones: observacionTemp,
-    };
-    onActualizarAlerta(actualizada);
-    setAlertaSeleccionada(actualizada);
-    setMensajeGuardado(true);
-    setTimeout(() => setMensajeGuardado(false), 2500);
   };
 
   // Alternar Reconocimiento (Conectado al backend)
@@ -274,7 +249,7 @@ export const TablaAlertas = ({
                   </label>
                 </th>
                 <th>ID Alerta</th>
-                <th>ID Proceso</th>
+                <th>Proceso</th>
                 <th>Tipo de Alerta</th>
                 <th>Severidad</th>
                 <th>Estado</th>
@@ -307,22 +282,21 @@ export const TablaAlertas = ({
                         </label>
                       </td>
 
-                      {/* ID Alerta */}
-                      <td className="td-alerta-id font-mono">{alerta.id}</td>
+                      {/* ID Alerta: UUID del evento, cortado con "…" y completo al pasar el mouse */}
+                      <td className="td-alerta-id font-mono">
+                        <span className="texto-truncado-alerta id-alerta" title={alerta.id}>{alerta.id}</span>
+                      </td>
 
-                      {/* ID Proceso */}
+                      {/* Proceso (o "Servidor (global)" si la alerta es del servidor) */}
                       <td className="td-proceso-info">
-                        <span className="proceso-id-tag font-mono">{alerta.procesoId}</span>
+                        <span className="texto-truncado-alerta nombre-proceso-alerta" title={alerta.procesoNombre}>
+                          {alerta.procesoNombre}
+                        </span>
                       </td>
 
                       {/* Tipo */}
                       <td className="td-alerta-tipo">
                         <span className="tipo-texto">{alerta.tipo}</span>
-                        {alerta.observaciones && (
-                          <span className="indicador-nota" title="Posee observaciones técnicas registradas">
-                            📝
-                          </span>
-                        )}
                       </td>
 
                       {/* Severidad */}
@@ -384,7 +358,7 @@ export const TablaAlertas = ({
             {/* Header del Drawer */}
             <div className="drawer-header">
               <div className="drawer-header-left">
-                <span className="drawer-badge-id font-mono">{alertaSeleccionada.id}</span>
+                <span className="drawer-badge-id font-mono" title={alertaSeleccionada.id}>{alertaSeleccionada.id}</span>
                 <h4>Detalle de Alerta</h4>
               </div>
               <button
@@ -411,10 +385,6 @@ export const TablaAlertas = ({
                 <div className="drawer-fila-info">
                   <span className="info-label">Proceso:</span>
                   <span className="info-valor font-mono">{alertaSeleccionada.procesoNombre}</span>
-                </div>
-                <div className="drawer-fila-info">
-                  <span className="info-label">ID Proceso:</span>
-                  <span className="info-valor font-mono">{alertaSeleccionada.procesoId}</span>
                 </div>
                 {alertaSeleccionada.valorDetectado && (
                   <div className="drawer-fila-info">
@@ -486,36 +456,6 @@ export const TablaAlertas = ({
                   <pre className="telegram-cuerpo font-mono">
                     {alertaSeleccionada.mensajeTelegram.cuerpo}
                   </pre>
-                </div>
-              </div>
-
-              {/* Sección Editable de Observaciones */}
-              <div className="drawer-seccion-card observaciones-card">
-                <div className="seccion-subtitulo">
-                  <span>📝 Observaciones Técnicas</span>
-                  {mensajeGuardado && <span className="badge-guardado">✓ Guardado</span>}
-                </div>
-
-                <p className="observaciones-ayuda">
-                  Registra diagnósticos, causas identificadas o acciones tomadas por el equipo de guardia.
-                </p>
-
-                <textarea
-                  className="textarea-observaciones"
-                  placeholder="Escribe tus observaciones o seguimiento de la alerta aquí..."
-                  rows={4}
-                  value={observacionTemp}
-                  onChange={(e) => setObservacionTemp(e.target.value)}
-                />
-
-                <div className="observaciones-footer">
-                  <button
-                    type="button"
-                    className="btn-guardar-observaciones"
-                    onClick={handleGuardarObservaciones}
-                  >
-                    Guardar Observaciones
-                  </button>
                 </div>
               </div>
             </div>

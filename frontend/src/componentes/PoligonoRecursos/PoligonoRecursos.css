@@ -239,6 +239,19 @@
   font-weight: 600;
 }
 
+/* Umbral global de RAM (mismo verde que su línea) */
+.linea-umbral.umbral-ram {
+  stroke: #4d7a33;
+  stroke-dasharray: 3 3;
+}
+
+.label-umbral-ram {
+  font-size: 10px;
+  fill: #7cb35a;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
 .poligono-linea {
   stroke-width: 2;
   transition: d 0.3s ease;

@@ -415,6 +415,15 @@ export const TablaProcesos = ({
       {/* Tabla con encabezados interactivos estilo Windows Explorer */}
       <div className="tabla-scroll-wrapper">
         <table className="tabla-datos">
+          {/* Anchos fijos: el contenido largo se corta con "…" y se ve completo al pasar el mouse */}
+          <colgroup>
+            <col className="col-checkbox" />
+            <col className="col-proceso" />
+            <col className="col-etiquetas" />
+            <col className="col-pids" />
+            <col className="col-cpu" />
+            <col className="col-ram" />
+          </colgroup>
           <thead>
             <tr>
               {/* Columna Checkbox Todos */}
@@ -528,7 +537,7 @@ export const TablaProcesos = ({
                     {/* Nombre */}
                     <td className="nombre-proceso">
                       <div className="nombre-con-indicador">
-                        {proc.name}
+                        <span className="texto-truncado" title={proc.name}>{proc.name}</span>
                         {analizandoEnPoligonoNombres?.includes(proc.name) && (
                           <span
                             className="badge-en-analisis"
@@ -552,7 +561,7 @@ export const TablaProcesos = ({
 
                     {/* Etiquetas */}
                     <td className="td-etiquetas">
-                      <div className="tags-container">
+                      <div className="tags-container" title={proc.tags?.length ? proc.tags.join(', ') : undefined}>
                         {proc.tags && proc.tags.length > 0 ? (
                           proc.tags.map((tag) => (
                             <span key={tag} className="badge-etiqueta">
@@ -566,7 +575,7 @@ export const TablaProcesos = ({
                     </td>
 
                     {/* PIDs */}
-                    <td className="pids-proceso">
+                    <td className="pids-proceso" title={proc.pids?.length ? proc.pids.join(', ') : undefined}>
                       {proc.pids && proc.pids.length > 0 ? proc.pids.join(', ') : 'N/A'}
                     </td>
 

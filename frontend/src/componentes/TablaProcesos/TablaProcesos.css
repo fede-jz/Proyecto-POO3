@@ -566,7 +566,6 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 0.5rem 0.25rem;
-  margin-top: 0.75rem;
   border-top: 1px solid rgba(51, 65, 85, 0.4);
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -729,4 +728,94 @@
   background-color: rgba(239, 68, 68, 0.12);
   border: 1px solid rgba(239, 68, 68, 0.35);
   color: #f87171;
+}
+
+/* =========================================
+   COLUMNAS FIJAS CON TEXTO TRUNCADO
+   ========================================= */
+
+.tabla-datos {
+  table-layout: fixed;
+}
+
+.col-checkbox { width: 38px; }
+.col-proceso { width: auto; }
+.col-etiquetas { width: 22%; }
+.col-pids { width: 16%; }
+.col-cpu { width: 76px; }
+.col-ram { width: 76px; }
+
+/* Todas las celdas en una sola línea; lo que no entra se corta con "…" */
+.tabla-datos th,
+.tabla-datos td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nombre-con-indicador {
+  min-width: 0;
+}
+
+.texto-truncado {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nombre-con-indicador .badge-en-analisis,
+.nombre-con-indicador .badge-monitoreado-tabla,
+.nombre-con-indicador .badge-detenido-tabla {
+  flex-shrink: 0;
+}
+
+.td-etiquetas {
+  min-width: 0;
+}
+
+.tags-container {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.tags-container .badge-etiqueta {
+  flex-shrink: 0;
+}
+
+/* La última fila no lleva borde inferior */
+.tabla-datos tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =========================================
+   DIMENSIONES FIJAS
+   Todas las filas miden lo mismo (con o sin etiquetas): el contenido no cambia el tamaño
+   de la tabla, que solo ocupa las filas que tiene.
+   ========================================= */
+
+.tabla-datos {
+  --alto-fila: 42px;
+  --alto-encabezado: 40px;
+}
+
+.tabla-datos thead tr {
+  height: var(--alto-encabezado);
+}
+
+.tabla-datos tbody tr {
+  height: var(--alto-fila);
+}
+
+.tabla-datos td {
+  padding-top: 0;
+  padding-bottom: 0;
+  vertical-align: middle;
+}
+
+.tags-container .badge-etiqueta,
+.nombre-con-indicador .badge-en-analisis,
+.nombre-con-indicador .badge-monitoreado-tabla,
+.nombre-con-indicador .badge-detenido-tabla {
+  line-height: 1.2;
 }
