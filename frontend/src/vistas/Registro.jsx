@@ -136,8 +136,8 @@ export default function Registro({ cambiarAVistaLogin }) {
             </span>
           </label>
 
-          {error && <p className="pm-form-error" role="alert" style={{ color: '#f87171', fontSize: '13px' }}>{error}</p>}
-          {exito && <p className="pm-form-success" role="alert" style={{ color: '#4ade80', fontSize: '13px' }}>{exito}</p>}
+          {error && <p className="pm-form-error" role="alert" style={{ color: 'var(--accent-red)', fontSize: '13px' }}>{error}</p>}
+          {exito && <p className="pm-form-success" role="alert" style={{ color: 'var(--accent-green)', fontSize: '13px' }}>{exito}</p>}
 
           <button className="pm-primary-button" type="submit" disabled={cargando}>
             <span>{cargando ? "Registrando..." : "Registrarse"}</span><UserPlus size={17} />
@@ -155,7 +155,7 @@ export default function Registro({ cambiarAVistaLogin }) {
           <button 
             type="button" 
             onClick={cambiarAVistaLogin} 
-            style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', textDecoration: 'underline', font: 'inherit' }}
+            style={{ background: 'none', border: 'none', color: 'var(--accent-link)', cursor: 'pointer', textDecoration: 'underline', font: 'inherit' }}
           >
             Iniciá sesión
           </button>

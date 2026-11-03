@@ -1,29 +1,82 @@
+/* Paleta de la interfaz. Todos los componentes usan estas variables para que el cambio de tema se aplique completo */
 :root,
 [data-theme='oscuro'] {
-  --bg-primary: #090C10;    
-  --bg-secondary: #0B0F14;  
-  --bg-card: #161D26;        
-  --border-color: #242C36;   
-  --text-main: #E9EFFD;      
-  --text-muted: #7C92AD;     
-  --accent-blue: #2563EB;    
-  --accent-cyan: #38bdf8;    
-  --accent-green: #4ade80;   
-  --accent-red: #f87171;     
+  color-scheme: dark;
+
+  /* Fondos */
+  --bg-primary: #090C10;     /* fondo de la página */
+  --bg-secondary: #0B0F14;   /* paneles, cabeceras, drawer */
+  --bg-card: #161D26;        /* tarjetas */
+  --bg-input: #020617;       /* inputs, selects */
+  --bg-sunken: #0d121a;      /* cajas hundidas dentro de una tarjeta */
+  --bg-hover: #1e293b;       /* hover de filas y botones */
+  --bg-active: #242c36;      /* elemento seleccionado */
+  --overlay: rgba(9, 12, 16, 0.7);
+
+  /* Bordes */
+  --border-color: #242C36;
+  --border-strong: #334155;
+
+  /* Textos */
+  --text-strong: #ffffff;
+  --text-main: #E9EFFD;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  --on-accent: #ffffff;      /* texto sobre botones de color */
+
+  /* Acentos */
+  --accent-blue: #2563EB;
+  --accent-blue-hover: #1d4ed8;
+  --accent-cyan: #38bdf8;
+  --accent-teal: #22d3ee;
+  --accent-green: #4ade80;
+  --accent-emerald: #34d399;
+  --accent-red: #f87171;
+  --accent-amber: #fbbf24;
+  --accent-purple: #c084fc;
+  --accent-link: #39a2ff;
+  --accent-link-hover: #78c5ff;
+
+  --shadow-base: #000000;
   --font-mono: 'Consolas', 'Fira Code', monospace;
 }
 
 [data-theme='claro'] {
-  --bg-primary: #f8fafc;
+  color-scheme: light;
+
+  --bg-primary: #f1f5f9;
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;
-  --border-color: #cbd5e1;
-  --text-main: #0f172a;
+  --bg-input: #ffffff;
+  --bg-sunken: #f8fafc;
+  --bg-hover: #eef2f7;
+  --bg-active: #e2e8f0;
+  --overlay: rgba(15, 23, 42, 0.35);
+
+  --border-color: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --text-strong: #0f172a;
+  --text-main: #1e293b;
+  --text-secondary: #334155;
   --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+  --on-accent: #ffffff;
+
   --accent-blue: #2563eb;
+  --accent-blue-hover: #1d4ed8;
   --accent-cyan: #0284c7;
+  --accent-teal: #0891b2;
   --accent-green: #16a34a;
+  --accent-emerald: #059669;
   --accent-red: #dc2626;
+  --accent-amber: #b45309;
+  --accent-purple: #9333ea;
+  --accent-link: #2563eb;
+  --accent-link-hover: #1d4ed8;
+
+  --shadow-base: rgba(15, 23, 42, 0.35);
   --font-mono: 'Consolas', 'Fira Code', monospace;
 }
 
