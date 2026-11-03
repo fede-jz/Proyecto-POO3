@@ -1,0 +1,58 @@
+/* =========================================
+   DETALLE DEL PROCESO (una sola tarjeta en la columna derecha)
+   ========================================= */
+
+.panel-proceso {
+  animation: aparecerPanelProceso 0.2s ease-out;
+}
+
+@keyframes aparecerPanelProceso {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel-proceso-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Separador entre secciones: datos / historial / alertas */
+.panel-proceso-seccion {
+  border-top: 1px solid rgba(51, 65, 85, 0.4);
+  padding-top: 1rem;
+}
+
+.badge-monitoreado {
+  background-color: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  color: var(--accent-green, #4ade80);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.12rem 0.5rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.btn-cerrar-panel-proceso {
+  background: transparent;
+  border: 1px solid var(--border-strong, #334155);
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-cerrar-panel-proceso:hover {
+  background-color: var(--bg-hover, #1e293b);
+  color: var(--accent-red, #f87171);
+  border-color: var(--accent-red, #f87171);
+}

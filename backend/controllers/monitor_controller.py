@@ -1,5 +1,9 @@
-from repositories import alertas_repositorio, procesos_repositorio
+from repositories import alertas_repositorio, procesos_repositorio, historial_repositorio
 from db import pool
+
+# Cada cuánto se guarda una muestra de los procesos monitoreados y cuántos días se conservan
+INTERVALO_HISTORIAL_SEGUNDOS = 30
+RETENCION_HISTORIAL_DIAS = 7
 
 #------------MONITOR DE ALERTAS----------------
 
@@ -57,3 +61,22 @@ def evaluar_alertas_db(cache: dict) -> list[dict]:
             elif not supera_limite and alerta["disparada"]:
                 alertas_repositorio.marcar_disparada(conn, alerta["id"], False)
     return eventos
+
+def guardar_historial_db(cache: dict) -> int:
+    """
+    Guarda una muestra de CPU y RAM de cada proceso guardado en la base (todos los guardados son los monitoreados).
+    Si el proceso no está corriendo se guarda en 0, así en el gráfico se ve cuándo estuvo caído.
+    También borra las muestras con más de RETENCION_HISTORIAL_DIAS días. Devuelve la cantidad de muestras guardadas.
+    """
+    corriendo = {proceso["name"].lower(): proceso for proceso in cache["procesos"]}
+    with pool.connection() as conn:
+        muestras = []
+        for proceso in procesos_repositorio.listar(conn):
+            actual = corriendo.get(proceso["nombre"].lower())
+            cpu = actual["cpu_percent"] if actual else 0.0
+            ram = actual["memory_percent"] if actual else 0.0
+            muestras.append((proceso["id"], cpu, ram))
+        if muestras:
+            historial_repositorio.insertar_muestras(conn, muestras)
+        historial_repositorio.eliminar_anteriores_a(conn, RETENCION_HISTORIAL_DIAS)
+    return len(muestras)

@@ -4,7 +4,9 @@ from controllers import monitor_controller, telegram_controller
 from fastapi import FastAPI, HTTPException, status
 import time
 import psutil
-from repositories import procesos_repositorio
+from psycopg.errors import UniqueViolation
+from repositories import procesos_repositorio, historial_repositorio
+from schemas.proceso_schema import ProcesoCreate
 from uuid import UUID
 from db import pool
 
@@ -30,6 +32,7 @@ def _agrupar_procesos_por_nombre(procesos):
 
 async def guardar_procesos_en_cache(app: FastAPI):
     print("Worker iniciado")
+    ultimo_historial = 0.0
     while True:
         # El escaneo espera 0.5s para medir la CPU; se corre en otro hilo para no bloquear las peticiones de la API
         procesos = await asyncio.to_thread(listar_procesos_sistema)
@@ -48,6 +51,13 @@ async def guardar_procesos_en_cache(app: FastAPI):
                 await asyncio.to_thread(telegram_controller.notificar_eventos_db, eventos)
         except Exception:
             logging.exception("Error al evaluar las alertas")
+        # El historial de los procesos monitoreados se guarda cada INTERVALO_HISTORIAL_SEGUNDOS, no en cada vuelta
+        if time.monotonic() - ultimo_historial >= monitor_controller.INTERVALO_HISTORIAL_SEGUNDOS:
+            ultimo_historial = time.monotonic()
+            try:
+                await asyncio.to_thread(monitor_controller.guardar_historial_db, app.state.procesos_cache)
+            except Exception:
+                logging.exception("Error al guardar el historial de procesos")
         await asyncio.sleep(5)
 
 def listar_procesos_sistema():
@@ -108,3 +118,44 @@ def obtener_proceso_db(proceso_id: UUID) -> dict:
             detail="El proceso no existe."
         )
     return proceso
+
+def monitorear_proceso_db(data: ProcesoCreate) -> dict:
+    """
+    Empieza a monitorear un proceso guardándolo en la base (todos los procesos guardados son los monitoreados).
+    El proceso puede no estar corriendo todavía: se va a ver como 'desconocido' hasta la próxima vuelta del monitor.
+    """
+    try:
+        with pool.connection() as conn:
+            return procesos_repositorio.crear(conn, data.nombre)
+    except UniqueViolation:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"El proceso '{data.nombre}' ya se está monitoreando."
+        )
+
+def dejar_de_monitorear_db(proceso_id: UUID) -> dict:
+    """
+    Deja de monitorear un proceso borrándolo de la base.
+    Junto con él se eliminan su historial, sus alertas y los eventos de esas alertas.
+    """
+    with pool.connection() as conn:
+        if not procesos_repositorio.eliminar(conn, proceso_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="El proceso no existe."
+            )
+    return {"mensaje": "Se dejó de monitorear el proceso."}
+
+def obtener_historial_db(proceso_id: UUID, horas: int) -> list[dict]:
+    """
+    Obtiene el historial de CPU y RAM de un proceso en las últimas `horas`.
+    Los rangos largos se promedian en intervalos para devolver como mucho ~360 puntos.
+    """
+    segundos_por_punto = max(monitor_controller.INTERVALO_HISTORIAL_SEGUNDOS, horas * 3600 // 360)
+    with pool.connection() as conn:
+        if not procesos_repositorio.buscar_por_id(conn, proceso_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="El proceso no existe."
+            )
+        return historial_repositorio.listar_por_proceso(conn, proceso_id, horas, segundos_por_punto)

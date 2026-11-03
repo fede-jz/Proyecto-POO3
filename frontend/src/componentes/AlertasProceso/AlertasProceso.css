@@ -2,11 +2,8 @@
    ALERTAS DEL PROCESO (dentro de Inspección de Proceso)
    ========================================= */
 
+/* Sección dentro de la tarjeta de detalle del proceso (sin borde propio) */
 .seccion-alertas-proceso {
-  background-color: var(--bg-input, #020617);
-  border: 1px solid var(--bg-hover, #1e293b);
-  border-radius: 8px;
-  padding: 0.625rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;

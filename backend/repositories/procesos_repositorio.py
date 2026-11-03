@@ -10,11 +10,22 @@ def obtener_o_crear(conn, nombre):
         (nombre,)
     ).fetchone()
 
+def crear(conn, nombre):
+    # Falla con UniqueViolation si el proceso ya está guardado (ya se monitorea)
+    return conn.execute(
+        "INSERT INTO procesos (nombre) VALUES (%s) RETURNING *",
+        (nombre,)
+    ).fetchone()
+
 def buscar_por_id(conn, proceso_id):
     return conn.execute("SELECT * FROM procesos WHERE id = %s", (proceso_id,)).fetchone()
 
 def listar(conn):
-    return conn.execute("SELECT * FROM procesos").fetchall()
+    return conn.execute("SELECT * FROM procesos ORDER BY nombre").fetchall()
+
+def eliminar(conn, proceso_id):
+    # Por el ON DELETE CASCADE también se borran su historial, sus alertas y los eventos de esas alertas
+    return conn.execute("DELETE FROM procesos WHERE id = %s RETURNING id", (proceso_id,)).fetchone()
 
 def actualizar_estado(conn, proceso_id, estado):
     return conn.execute(

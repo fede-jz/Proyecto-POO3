@@ -178,7 +178,7 @@ export async function guardarMisUmbralesService(cpu, ram) {
  * Lee la respuesta del servidor sin romperse si no es JSON (por ejemplo un 500 en texto plano)
  * y arma un mensaje de error legible a partir del "detail" de FastAPI
  */
-async function leerRespuesta(respuesta, mensajePorDefecto) {
+export async function leerRespuesta(respuesta, mensajePorDefecto) {
   let datos;
   try {
     datos = await respuesta.json();

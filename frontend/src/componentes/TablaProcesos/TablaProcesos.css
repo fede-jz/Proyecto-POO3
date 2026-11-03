@@ -626,3 +626,107 @@
   border-color: rgba(51, 65, 85, 0.3);
   color: #64748b;
 }
+
+/* =========================================
+   FILTRO Y BADGES DE PROCESOS MONITOREADOS
+   ========================================= */
+
+.selector-filtro-monitoreo {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.2rem;
+  background-color: #020617;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.selector-filtro-monitoreo button {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.selector-filtro-monitoreo button:hover {
+  color: #e2e8f0;
+}
+
+.selector-filtro-monitoreo button.activo {
+  background-color: #1e293b;
+  color: #22d3ee;
+  font-weight: 600;
+}
+
+.form-monitorear-tabla {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.input-monitorear-tabla {
+  flex: 1;
+  min-width: 220px;
+}
+
+.btn-monitorear-tabla {
+  background-color: #2563eb;
+  border: none;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-monitorear-tabla:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.btn-monitorear-tabla:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mensaje-monitoreo-tabla {
+  width: 100%;
+  font-size: 0.75rem;
+}
+
+.mensaje-monitoreo-tabla.exito {
+  color: #4ade80;
+}
+
+.mensaje-monitoreo-tabla.error {
+  color: #f87171;
+}
+
+.badge-monitoreado-tabla,
+.badge-detenido-tabla {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-monitoreado-tabla {
+  background-color: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  color: #4ade80;
+}
+
+.badge-detenido-tabla {
+  background-color: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}

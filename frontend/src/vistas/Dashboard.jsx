@@ -5,9 +5,16 @@ import { TablaProcesos } from '../componentes/TablaProcesos/TablaProcesos';
 import { TablaAlertas } from '../componentes/TablaAlertas/TablaAlertas';
 import { MenuAjustes } from '../componentes/MenuAjustes/MenuAjustes';
 import { obtenerDatosYMetricas } from '../controladores/gestorProcesos';
-import { GraficoIndividual } from '../componentes/GraficoIndividual/GraficoIndividual';
+import { PanelProceso } from '../componentes/PanelProceso/PanelProceso';
 import { PoligonoRecursos } from '../componentes/PoligonoRecursos/PoligonoRecursos';
-import { getStoredTags, saveStoredTags } from '../services/procesos';
+import {
+  getStoredTags,
+  saveStoredTags,
+  listarMonitoreadosService,
+  monitorearProcesoService,
+  dejarDeMonitorearService,
+  normalizarNombreProceso
+} from '../services/procesos';
 import { 
   obtenerMisUmbralesService, 
   obtenerDatosAlertas, 
@@ -37,6 +44,9 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
   // Alertas dinámicas desde el backend de Supabase
   const [alertas, setAlertas] = useState([]);
   const [reglasAlertas, setReglasAlertas] = useState([]);
+
+  // Procesos monitoreados (los guardados en la base, a los que se les guarda historial)
+  const [procesosMonitoreados, setProcesosMonitoreados] = useState([]);
 
   const [selectedProcessNames, setSelectedProcessNames] = useState([]);
 
@@ -76,13 +86,22 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
     }
   }, []);
 
+  const cargarMonitoreados = useCallback(async () => {
+    const resultado = await listarMonitoreadosService();
+    if (resultado.success) {
+      setProcesosMonitoreados(resultado.procesos);
+    }
+  }, []);
+
   const cargarAlertasReales = useCallback(async () => {
     const resultado = await obtenerDatosAlertas();
     if (resultado.success) {
       setAlertas(resultado.eventos);
     }
     cargarReglasAlertas();
-  }, [cargarReglasAlertas]);
+    // Crear una alerta guarda el proceso en la base, así que también puede cambiar la lista de monitoreados
+    cargarMonitoreados();
+  }, [cargarReglasAlertas, cargarMonitoreados]);
 
   const actualizarInformacion = useCallback(async () => {
     const datos = await obtenerDatosYMetricas();
@@ -99,10 +118,13 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
     setCpuTotal(datos.cpuTotal);
     setRamTotal(datos.ramTotal);
 
+    // Si el proceso abierto dejó de correr se sigue mostrando (puede ser uno monitoreado), pero sin consumo
     setProcesoSeleccionado((prev) => {
       if (!prev) return null;
       const matched = procesosConEtiquetas.find((p) => p.name === prev.name);
-      return matched || prev;
+      return matched
+        ? { ...matched, enEjecucion: true }
+        : { ...prev, pids: [], cpu_percent: 0, memory_percent: 0, enEjecucion: false };
     });
 
     const filtroActivo = polygonFilteredRef.current;
@@ -191,32 +213,6 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
     );
   };
 
-  const handleAddTagToProcess = (processName, tag) => {
-    const updatedMap = { ...tagsMapRef.current };
-    const existing = updatedMap[processName] || [];
-    if (!existing.includes(tag)) {
-      updatedMap[processName] = [...existing, tag];
-      saveStoredTags(updatedMap);
-      setTagsMap(updatedMap);
-
-      setProcesos((prev) =>
-        prev.map((p) => (p.name === processName ? { ...p, tags: updatedMap[processName] } : p))
-      );
-    }
-  };
-
-  const handleRemoveTagFromProcess = (processName, tag) => {
-    const updatedMap = { ...tagsMapRef.current };
-    const existing = updatedMap[processName] || [];
-    updatedMap[processName] = existing.filter((t) => t !== tag);
-    saveStoredTags(updatedMap);
-    setTagsMap(updatedMap);
-
-    setProcesos((prev) =>
-      prev.map((p) => (p.name === processName ? { ...p, tags: updatedMap[processName] } : p))
-    );
-  };
-
   const handleActualizarAlerta = (alertaActualizada) => {
     const actualizadas = alertas.map((a) => (a.id === alertaActualizada.id ? alertaActualizada : a));
     setAlertas(actualizadas);
@@ -260,7 +256,42 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
     return res;
   };
 
-  const conteoAlertasNoReconocidas =alertas.filter((a) => a.estadoEntrega === 'No reconocido').length;
+  const handleMonitorearProceso = async (nombreProceso) => {
+    const res = await monitorearProcesoService(nombreProceso);
+    if (res.success) cargarMonitoreados();
+    return res;
+  };
+
+  // Dejar de monitorear borra el proceso de la base junto con su historial y sus alertas
+  const handleDejarDeMonitorear = async (procesoId) => {
+    const res = await dejarDeMonitorearService(procesoId);
+    if (res.success) {
+      cargarMonitoreados();
+      cargarReglasAlertas();
+    }
+    return res;
+  };
+
+  // Al presionar un proceso se abre su detalle en el panel lateral (y se despliega el panel si estaba oculto).
+  // Los monitoreados que están detenidos llegan sin consumo y con enEjecucion en false
+  const handleSeleccionarProceso = (proc) => {
+    setProcesoSeleccionado({
+      ...proc,
+      tags: proc.tags?.length ? proc.tags : tagsMapRef.current[proc.name] || [],
+      enEjecucion: proc.enEjecucion !== false,
+    });
+    setSidebarAbierto(true);
+  };
+
+  const handleCerrarPanelProceso = useCallback(() => setProcesoSeleccionado(null), []);
+
+  const procesoMonitoreadoSeleccionado = procesoSeleccionado
+    ? procesosMonitoreados.find(
+        (p) => normalizarNombreProceso(p.nombre) === normalizarNombreProceso(procesoSeleccionado.name)
+      ) || null
+    : null;
+
+  const conteoAlertasNoReconocidas = alertas.filter((a) => a.estadoEntrega === 'No reconocido').length;
   const esAdministrador = usuario?.rol === 'Administrador';
 
   return (
@@ -299,13 +330,16 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
               <div className="columna-tabla">
                 <TablaProcesos
                   processes={procesos}
-                  onSelectProcess={(proc) => setProcesoSeleccionado(proc)}
+                  onSelectProcess={handleSeleccionarProceso}
                   selectedProcessNames={selectedProcessNames}
                   onSelectionChange={setSelectedProcessNames}
                   onAnalyzeInPolygon={handleAnalyzeInPolygon}
                   analizandoEnPoligonoNombres={polygonFilteredNames}
                   onApplyMassTag={handleApplyMassTag}
                   procesoSeleccionado={procesoSeleccionado}
+                  monitoreados={procesosMonitoreados}
+                  esAdmin={esAdministrador}
+                  onMonitorear={handleMonitorearProceso}
                 />
               </div>
 
@@ -327,15 +361,19 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
                       filtroProcesosNombres={polygonFilteredNames}
                       onRestablecerFiltro={handleResetPolygonFilter}
                     />
-                    <GraficoIndividual
+
+                    {/* Detalle del proceso: solo aparece cuando se presiona un proceso de la tabla */}
+                    <PanelProceso
                       proceso={procesoSeleccionado}
-                      onAddTag={handleAddTagToProcess}
-                      onRemoveTag={handleRemoveTagFromProcess}
+                      procesoMonitoreado={procesoMonitoreadoSeleccionado}
+                      onCerrar={handleCerrarPanelProceso}
                       reglasAlertas={reglasAlertas}
                       esAdmin={esAdministrador}
                       onCrearAlerta={handleCrearAlertaProceso}
                       onActualizarAlerta={handleActualizarReglaAlerta}
                       onEliminarAlerta={handleEliminarReglaAlerta}
+                      onMonitorear={handleMonitorearProceso}
+                      onDejarDeMonitorear={handleDejarDeMonitorear}
                     />
                   </aside>
                 )}
