@@ -52,9 +52,9 @@
 .metric-badge-filtro {
   font-size: 0.65rem;
   font-weight: 600;
-  background-color: rgba(200, 180, 76, 0.18);
-  border: 1px solid rgba(200, 180, 76, 0.4);
-  color: #f1e16b;
+  background-color: color-mix(in srgb, var(--color-cpu) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-cpu) 40%, transparent);
+  color: var(--color-cpu-texto);
   padding: 0.1rem 0.45rem;
   border-radius: 9999px;
   white-space: nowrap;
@@ -93,24 +93,24 @@
 }
 
 .sparkline-linea.cpu {
-  stroke: #c7b44c;
+  stroke: var(--color-cpu);
 }
 
 .sparkline-linea.ram {
-  stroke: #619242;
+  stroke: var(--color-ram);
 }
 
 .sparkline-area.cpu {
-  fill: rgba(199, 180, 76, 0.15);
+  fill: color-mix(in srgb, var(--color-cpu) 15%, transparent);
 }
 
 .sparkline-area.ram {
-  fill: rgba(97, 146, 66, 0.15);
+  fill: color-mix(in srgb, var(--color-ram) 15%, transparent);
 }
 
 /* Umbral global de la métrica (el mismo que se configura en Ajustes) */
 .sparkline-umbral {
-  stroke: rgba(248, 113, 113, 0.7);
+  stroke: color-mix(in srgb, var(--accent-red) 70%, transparent);
   stroke-width: 1;
   stroke-dasharray: 4 4;
   vector-effect: non-scaling-stroke;
@@ -135,7 +135,7 @@
 }
 
 .metric-umbral strong {
-  color: #f87171;
+  color: var(--accent-red);
 }
 
 /* El subtítulo queda abajo de todo para que las tres tarjetas se vean parejas */

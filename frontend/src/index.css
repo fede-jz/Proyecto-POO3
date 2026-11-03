@@ -38,6 +38,14 @@
   --accent-link: #39a2ff;
   --accent-link-hover: #78c5ff;
 
+  /* Métricas (CPU amarillo, RAM verde) */
+  --color-cpu: #c7b44c;
+  --color-cpu-texto: #f1e16b;
+  --color-cpu-fuerte: #ecd138;
+  --color-ram: #619242;
+  --color-ram-texto: #7cb35a;
+  --color-ram-borde: #4d7a33;
+
   --shadow-base: #000000;
   --font-mono: 'Consolas', 'Fira Code', monospace;
 }
@@ -75,6 +83,13 @@
   --accent-purple: #9333ea;
   --accent-link: #2563eb;
   --accent-link-hover: #1d4ed8;
+
+  --color-cpu: #ca8a04;
+  --color-cpu-texto: #854d0e;
+  --color-cpu-fuerte: #a16207;
+  --color-ram: #4d7c0f;
+  --color-ram-texto: #3f6212;
+  --color-ram-borde: #3f6212;
 
   --shadow-base: rgba(15, 23, 42, 0.35);
   --font-mono: 'Consolas', 'Fira Code', monospace;

@@ -72,20 +72,20 @@
 }
 
 .badge-tipo-alerta.tipo-caida {
-  background-color: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.35);
+  background-color: color-mix(in srgb, var(--accent-red) 15%, transparent);
+  border-color: color-mix(in srgb, var(--accent-red) 35%, transparent);
   color: var(--accent-red, #f87171);
 }
 
 .badge-tipo-alerta.tipo-cpu {
-  background-color: rgba(217, 119, 6, 0.15);
-  border-color: rgba(217, 119, 6, 0.4);
+  background-color: color-mix(in srgb, var(--accent-amber) 15%, transparent);
+  border-color: color-mix(in srgb, var(--accent-amber) 40%, transparent);
   color: var(--accent-amber, #fbbf24);
 }
 
 .badge-tipo-alerta.tipo-ram {
-  background-color: rgba(16, 185, 129, 0.15);
-  border-color: rgba(16, 185, 129, 0.35);
+  background-color: color-mix(in srgb, var(--accent-emerald) 15%, transparent);
+  border-color: color-mix(in srgb, var(--accent-emerald) 35%, transparent);
   color: var(--accent-emerald, #34d399);
 }
 
@@ -102,12 +102,12 @@
 
 .estado-alerta-proceso.activa {
   color: var(--accent-green, #4ade80);
-  background-color: rgba(74, 222, 128, 0.12);
+  background-color: color-mix(in srgb, var(--accent-green) 12%, transparent);
 }
 
 .estado-alerta-proceso.pausada {
   color: var(--text-muted, #94a3b8);
-  background-color: rgba(148, 163, 184, 0.12);
+  background-color: color-mix(in srgb, var(--text-muted) 12%, transparent);
 }
 
 /* Acciones (solo administradores) */
@@ -157,7 +157,7 @@
 .btn-confirmar-eliminar {
   background-color: #dc2626;
   border: none;
-  color: #ffffff;
+  color: var(--on-accent);
   font-size: 0.7rem;
   font-weight: 600;
   padding: 0.25rem 0.5rem;

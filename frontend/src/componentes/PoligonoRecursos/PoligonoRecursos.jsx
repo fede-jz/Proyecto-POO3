@@ -173,12 +173,12 @@ export const PoligonoRecursos = ({
           <svg viewBox={`0 0 ${width} ${height}`} className="svg-poligono">
             <defs>
               <linearGradient id="gradCpu" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#C7B44C" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#C7B44C" stopOpacity="0.0" />
+                <stop offset="0%" style={{ stopColor: 'var(--color-cpu)' }} stopOpacity="0.35" />
+                <stop offset="100%" style={{ stopColor: 'var(--color-cpu)' }} stopOpacity="0.0" />
               </linearGradient>
               <linearGradient id="gradRam" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#619242" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#619242" stopOpacity="0.0" />
+                <stop offset="0%" style={{ stopColor: 'var(--color-ram)' }} stopOpacity="0.35" />
+                <stop offset="100%" style={{ stopColor: 'var(--color-ram)' }} stopOpacity="0.0" />
               </linearGradient>
             </defs>
 

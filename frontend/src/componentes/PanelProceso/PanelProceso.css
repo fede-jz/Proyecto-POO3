@@ -25,13 +25,13 @@
 
 /* Separador entre secciones: datos / historial / alertas */
 .panel-proceso-seccion {
-  border-top: 1px solid rgba(51, 65, 85, 0.4);
+  border-top: 1px solid color-mix(in srgb, var(--border-strong) 40%, transparent);
   padding-top: 1rem;
 }
 
 .badge-monitoreado {
-  background-color: rgba(74, 222, 128, 0.12);
-  border: 1px solid rgba(74, 222, 128, 0.35);
+  background-color: color-mix(in srgb, var(--accent-green) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-green) 35%, transparent);
   color: var(--accent-green, #4ade80);
   font-size: 0.68rem;
   font-weight: 600;

@@ -116,7 +116,7 @@
 }
 
 .badge-seleccion-count {
-  background-color: #2563eb;
+  background-color: var(--accent-blue);
   color: var(--on-accent);
   font-weight: 700;
   font-size: 0.75rem;
@@ -169,7 +169,7 @@
 
 .btn-limpiar-sel:hover {
   background-color: color-mix(in srgb, var(--accent-red) 15%, transparent);
-  border-color: #ef4444;
+  border-color: var(--accent-red);
   color: var(--accent-red);
 }
 
@@ -250,7 +250,7 @@
 }
 
 .chip-tag-btn:hover {
-  background-color: #2563eb;
+  background-color: var(--accent-blue);
   border-color: #3b82f6;
   color: var(--on-accent);
 }
@@ -276,7 +276,7 @@
 }
 
 .btn-aplicar-etiqueta {
-  background-color: #2563eb;
+  background-color: var(--accent-blue);
   border: none;
   color: var(--on-accent);
   font-size: 0.75rem;
@@ -357,8 +357,8 @@
 }
 
 .checkbox-custom-container input:checked ~ .checkbox-checkmark {
-  background-color: #2563eb;
-  border-color: #2563eb;
+  background-color: var(--accent-blue);
+  border-color: var(--accent-blue);
 }
 
 .checkbox-custom-container input:checked ~ .checkbox-checkmark::after {
@@ -369,8 +369,8 @@
 }
 
 .checkbox-custom-container input:indeterminate ~ .checkbox-checkmark {
-  background-color: #2563eb;
-  border-color: #2563eb;
+  background-color: var(--accent-blue);
+  border-color: var(--accent-blue);
 }
 
 .checkbox-custom-container input:indeterminate ~ .checkbox-checkmark::after {
@@ -422,20 +422,20 @@
 }
 
 /* =========================================
-   INDICADOR ACTIVO EN ROJO (#ef4444)
+   INDICADOR ACTIVO EN ROJO (var(--accent-red))
    ========================================= */
 
 .th-ordenable.columna-activa {
-  color: #ef4444 !important;
+  color: var(--accent-red) !important;
 }
 
 .th-ordenable.columna-activa .th-titulo {
-  color: #ef4444 !important;
+  color: var(--accent-red) !important;
   font-weight: 700;
 }
 
 .th-ordenable.columna-activa .indicador-triangulo {
-  color: #ef4444 !important;
+  color: var(--accent-red) !important;
   opacity: 1;
 }
 
@@ -634,8 +634,8 @@
   display: flex;
   flex-shrink: 0;
   gap: 0.2rem;
-  background-color: #020617;
-  border: 1px solid #334155;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   padding: 2px;
 }
@@ -643,7 +643,7 @@
 .selector-filtro-monitoreo button {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.78rem;
   padding: 0.35rem 0.65rem;
   border-radius: 6px;
@@ -653,12 +653,12 @@
 }
 
 .selector-filtro-monitoreo button:hover {
-  color: #e2e8f0;
+  color: var(--text-main);
 }
 
 .selector-filtro-monitoreo button.activo {
-  background-color: #1e293b;
-  color: #22d3ee;
+  background-color: var(--bg-hover);
+  color: var(--accent-teal);
   font-weight: 600;
 }
 
@@ -676,9 +676,9 @@
 }
 
 .btn-monitorear-tabla {
-  background-color: #2563eb;
+  background-color: var(--accent-blue);
   border: none;
-  color: #ffffff;
+  color: var(--on-accent);
   font-size: 0.8rem;
   font-weight: 600;
   padding: 0.5rem 0.9rem;
@@ -688,7 +688,7 @@
 }
 
 .btn-monitorear-tabla:hover:not(:disabled) {
-  background-color: #1d4ed8;
+  background-color: var(--accent-blue-hover);
 }
 
 .btn-monitorear-tabla:disabled {
@@ -702,11 +702,11 @@
 }
 
 .mensaje-monitoreo-tabla.exito {
-  color: #4ade80;
+  color: var(--accent-green);
 }
 
 .mensaje-monitoreo-tabla.error {
-  color: #f87171;
+  color: var(--accent-red);
 }
 
 .badge-monitoreado-tabla,
@@ -719,15 +719,15 @@
 }
 
 .badge-monitoreado-tabla {
-  background-color: rgba(74, 222, 128, 0.12);
-  border: 1px solid rgba(74, 222, 128, 0.35);
-  color: #4ade80;
+  background-color: color-mix(in srgb, var(--accent-green) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-green) 35%, transparent);
+  color: var(--accent-green);
 }
 
 .badge-detenido-tabla {
-  background-color: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  color: #f87171;
+  background-color: color-mix(in srgb, var(--accent-red) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-red) 35%, transparent);
+  color: var(--accent-red);
 }
 
 /* =========================================

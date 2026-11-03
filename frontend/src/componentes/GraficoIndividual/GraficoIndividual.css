@@ -38,8 +38,8 @@
 }
 
 .badge-activo.detenido {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  background-color: color-mix(in srgb, var(--accent-red) 15%, transparent);
+  color: var(--accent-red);
 }
 
 /* =========================================
@@ -96,7 +96,7 @@
 
 /* Botones compartidos con los formularios del detalle (alertas) */
 .btn-guardar-tag {
-  background-color: #2563eb;
+  background-color: var(--accent-blue);
   border: none;
   color: var(--on-accent);
   font-size: 0.7rem;
@@ -180,6 +180,6 @@
 }
 
 .ram-valor {
-  color: #619242;
+  color: var(--color-ram);
   font-weight: 600;
 }
