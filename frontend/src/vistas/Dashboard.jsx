@@ -34,7 +34,8 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
   const [cpuTotal, setCpuTotal] = useState('0.0');
   const [ramTotal, setRamTotal] = useState('0.0');
   const [procesoSeleccionado, setProcesoSeleccionado] = useState(null);
-  const [sidebarAbierto, setSidebarAbierto] = useState(true);
+  // Gráfico ampliado de las tarjetas de CPU/RAM: null (cerrado), 'cpu' o 'ram'
+  const [graficoAmpliado, setGraficoAmpliado] = useState(null);
   const [horaServidor, setHoraServidor] = useState('');
   const [historialMuestras, setHistorialMuestras] = useState([]);
 
@@ -272,7 +273,7 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
     return res;
   };
 
-  // Al presionar un proceso se abre su detalle en el panel lateral (y se despliega el panel si estaba oculto).
+  // Al presionar un proceso se abre su detalle en la columna derecha.
   // Los monitoreados que están detenidos llegan sin consumo y con enEjecucion en false
   const handleSeleccionarProceso = (proc) => {
     setProcesoSeleccionado({
@@ -280,8 +281,19 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
       tags: proc.tags?.length ? proc.tags : tagsMapRef.current[proc.name] || [],
       enEjecucion: proc.enEjecucion !== false,
     });
-    setSidebarAbierto(true);
   };
+
+  const handleCerrarGraficoAmpliado = useCallback(() => setGraficoAmpliado(null), []);
+
+  // Con "Analizar selección" activo, las tarjetas muestran la suma de los procesos seleccionados
+  // (la última muestra del historial ya se calcula filtrada en actualizarInformacion)
+  const analizandoSeleccion = Boolean(polygonFilteredNames && polygonFilteredNames.length > 0);
+  const ultimaMuestra = historialMuestras[historialMuestras.length - 1];
+  const cpuMostrado = analizandoSeleccion && ultimaMuestra ? ultimaMuestra.cpu.toFixed(1) : cpuTotal;
+  const ramMostrado = analizandoSeleccion && ultimaMuestra ? ultimaMuestra.ram.toFixed(1) : ramTotal;
+  const etiquetaFiltro = analizandoSeleccion
+    ? `Selección (${polygonFilteredNames.length} ${polygonFilteredNames.length === 1 ? 'proceso' : 'procesos'})`
+    : null;
 
   const handleCerrarPanelProceso = useCallback(() => setProcesoSeleccionado(null), []);
 
@@ -316,9 +328,41 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
       <main className="main-content">
         {vistaActiva === 'procesos' && (
           <>
+            {/* Aviso cuando las tarjetas muestran solo el consumo de los procesos seleccionados */}
+            {analizandoSeleccion && (
+              <div className="banner-analisis-seleccion">
+                <span>
+                  📊 Analizando el consumo de: <strong>{polygonFilteredNames.join(', ')}</strong>
+                </span>
+                <button type="button" className="btn-restablecer-analisis" onClick={handleResetPolygonFilter}>
+                  Restablecer a General
+                </button>
+              </div>
+            )}
+
             <section className="metrics-grid">
-              <TarjetaMetrica title="CPU Total Usado" value={cpuTotal} unit="%" subtitle="" />
-              <TarjetaMetrica title="Memoria RAM Usada" value={ramTotal} unit="%" subtitle="" />
+              <TarjetaMetrica
+                title={analizandoSeleccion ? 'CPU de la Selección' : 'CPU Total Usado'}
+                value={cpuMostrado}
+                unit="%"
+                valores={historialMuestras.map((m) => m.cpu)}
+                serie="cpu"
+                umbralAdvertencia={umbralAdvertencia}
+                umbralCritico={umbralCritico}
+                etiquetaFiltro={etiquetaFiltro}
+                onAmpliar={() => setGraficoAmpliado('cpu')}
+              />
+              <TarjetaMetrica
+                title={analizandoSeleccion ? 'RAM de la Selección' : 'Memoria RAM Usada'}
+                value={ramMostrado}
+                unit="%"
+                valores={historialMuestras.map((m) => m.ram)}
+                serie="ram"
+                umbralAdvertencia={umbralAdvertencia}
+                umbralCritico={umbralCritico}
+                etiquetaFiltro={etiquetaFiltro}
+                onAmpliar={() => setGraficoAmpliado('ram')}
+              />
               <TarjetaMetrica
                 title="Procesos Únicos"
                 value={totalProcesosAgrupados}
@@ -326,7 +370,22 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
               />
             </section>
 
-            <div className={`dashboard-layout-desplegable ${sidebarAbierto ? 'con-sidebar' : 'sin-sidebar'}`}>
+            {/* Gráfico ampliado al hacer clic en la tarjeta de CPU o RAM */}
+            {graficoAmpliado && (
+              <PoligonoRecursos
+                key={graficoAmpliado}
+                historial={historialMuestras}
+                umbralAdvertencia={umbralAdvertencia}
+                umbralCritico={umbralCritico}
+                filtroProcesosNombres={polygonFilteredNames}
+                onRestablecerFiltro={handleResetPolygonFilter}
+                metricaInicial={graficoAmpliado}
+                onCerrar={handleCerrarGraficoAmpliado}
+              />
+            )}
+
+            {/* La columna derecha solo existe mientras hay un proceso abierto; si no, la tabla ocupa todo el ancho */}
+            <div className={`dashboard-layout-desplegable ${procesoSeleccionado ? 'con-detalle' : 'sin-detalle'}`}>
               <div className="columna-tabla">
                 <TablaProcesos
                   processes={procesos}
@@ -343,41 +402,23 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
                 />
               </div>
 
-              <div className="wrapper-sidebar-lateral">
-                <button
-                  className="lengueta-desplegable"
-                  onClick={() => setSidebarAbierto(!sidebarAbierto)}
-                  title={sidebarAbierto ? 'Ocultar panel' : 'Mostrar panel y gráficos'}
-                >
-                  {sidebarAbierto ? '›' : '‹'}
-                </button>
-
-                {sidebarAbierto && (
-                  <aside className="columna-paneles-derecha">
-                    <PoligonoRecursos
-                      historial={historialMuestras}
-                      umbralAdvertencia={umbralAdvertencia}
-                      umbralCritico={umbralCritico}
-                      filtroProcesosNombres={polygonFilteredNames}
-                      onRestablecerFiltro={handleResetPolygonFilter}
-                    />
-
-                    {/* Detalle del proceso: solo aparece cuando se presiona un proceso de la tabla */}
-                    <PanelProceso
-                      proceso={procesoSeleccionado}
-                      procesoMonitoreado={procesoMonitoreadoSeleccionado}
-                      onCerrar={handleCerrarPanelProceso}
-                      reglasAlertas={reglasAlertas}
-                      esAdmin={esAdministrador}
-                      onCrearAlerta={handleCrearAlertaProceso}
-                      onActualizarAlerta={handleActualizarReglaAlerta}
-                      onEliminarAlerta={handleEliminarReglaAlerta}
-                      onMonitorear={handleMonitorearProceso}
-                      onDejarDeMonitorear={handleDejarDeMonitorear}
-                    />
-                  </aside>
-                )}
-              </div>
+              {procesoSeleccionado && (
+                <aside className="columna-paneles-derecha">
+                  {/* Detalle del proceso: solo aparece cuando se presiona un proceso de la tabla */}
+                  <PanelProceso
+                    proceso={procesoSeleccionado}
+                    procesoMonitoreado={procesoMonitoreadoSeleccionado}
+                    onCerrar={handleCerrarPanelProceso}
+                    reglasAlertas={reglasAlertas}
+                    esAdmin={esAdministrador}
+                    onCrearAlerta={handleCrearAlertaProceso}
+                    onActualizarAlerta={handleActualizarReglaAlerta}
+                    onEliminarAlerta={handleEliminarReglaAlerta}
+                    onMonitorear={handleMonitorearProceso}
+                    onDejarDeMonitorear={handleDejarDeMonitorear}
+                  />
+                </aside>
+              )}
             </div>
           </>
         )}

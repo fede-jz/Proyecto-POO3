@@ -1,27 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './PoligonoRecursos.css';
 
+/**
+ * Gráfico ampliado de consumo (CPU/RAM) de las últimas muestras.
+ * Se abre en un modal al hacer clic en las tarjetas de CPU o RAM del Dashboard.
+ */
 export const PoligonoRecursos = ({
   historial = [],
   umbralAdvertencia = 80,
   umbralCritico = 90,
   filtroProcesosNombres = null,
   onRestablecerFiltro,
+  metricaInicial = 'ambas',
+  onCerrar,
 }) => {
-  const [metricaSeleccionada, setMetricaSeleccionada] = useState('ambas');
+  const [metricaSeleccionada, setMetricaSeleccionada] = useState(metricaInicial);
   const [puntoHover, setPuntoHover] = useState(null);
-  const [maximizado, setMaximizado] = useState(false);
+  // Siempre se muestra ampliado: la vista chica ahora son las tarjetas de CPU y RAM
+  const maximizado = true;
 
-  // Escuchar tecla Escape para salir de modo maximizado
+  // Cerrar con Escape
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && maximizado) {
-        setMaximizado(false);
-      }
+      if (e.key === 'Escape' && onCerrar) onCerrar();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [maximizado]);
+  }, [onCerrar]);
 
   const cantidadMuestras = historial.length;
   const cpuValores = historial.map((m) => m.cpu);
@@ -78,7 +83,7 @@ export const PoligonoRecursos = ({
       <div className="poligono-header">
         <div className="poligono-titulos">
           <div className="titulo-con-badge">
-            <h4>Polígono de Consumo</h4>
+            <h4>Consumo reciente</h4>
             {filtroProcesosNombres && filtroProcesosNombres.length > 0 ? (
               <span className="badge-modo-filtro" title={filtroProcesosNombres.join(', ')}>
                 Filtrado ({filtroProcesosNombres.length} proc)
@@ -89,7 +94,6 @@ export const PoligonoRecursos = ({
           </div>
           <p className="sub-poligono">
             Historial optimizado (últimas {cantidadMuestras}/30 muestras)
-            {maximizado ? ' • Modo pantalla completa' : ''}
           </p>
         </div>
 
@@ -119,19 +123,15 @@ export const PoligonoRecursos = ({
             </button>
           </div>
 
-          {/* Botón Maximizar / Minimizar */}
+          {/* Cerrar el gráfico ampliado */}
           <button
             type="button"
             className="btn-toggle-maximizar"
-            onClick={() => setMaximizado(!maximizado)}
-            title={maximizado ? 'Restaurar / Minimizar vista (Esc)' : 'Maximizar polígono a pantalla completa'}
-            aria-label={maximizado ? 'Minimizar' : 'Maximizar'}
+            onClick={onCerrar}
+            title="Cerrar (Esc)"
+            aria-label="Cerrar"
           >
-            {maximizado ? (
-              <span className="icono-max">🗗 Minimizar</span>
-            ) : (
-              <span className="icono-max">⛶</span>
-            )}
+            <span className="icono-max">✕ Cerrar</span>
           </button>
         </div>
       </div>
@@ -301,19 +301,15 @@ export const PoligonoRecursos = ({
     </div>
   );
 
-  // Si está maximizado, renderizar en backdrop modal completo
-  if (maximizado) {
-    return (
-      <div
-        className="poligono-backdrop-overlay"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) setMaximizado(false);
-        }}
-      >
-        <div className="contenedor-modal-poligono">{contenidoCard}</div>
-      </div>
-    );
-  }
-
-  return contenidoCard;
+  // Se muestra en un modal de pantalla completa; clic fuera del gráfico lo cierra
+  return (
+    <div
+      className="poligono-backdrop-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && onCerrar) onCerrar();
+      }}
+    >
+      <div className="contenedor-modal-poligono">{contenidoCard}</div>
+    </div>
+  );
 };

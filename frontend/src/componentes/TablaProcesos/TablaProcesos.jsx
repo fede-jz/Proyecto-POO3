@@ -293,15 +293,15 @@ export const TablaProcesos = ({
           </div>
 
           <div className="seleccion-botones">
-            {/* 1. Analizar en el polígono */}
+            {/* 1. Analizar la selección en las tarjetas de CPU y RAM */}
             <button
               type="button"
               className={`btn-accion-sel ${poligonofiltroActivo ? 'activo' : ''}`}
               onClick={() => onAnalyzeInPolygon && onAnalyzeInPolygon(selectedProcessNames)}
-              title="Filtrar el gráfico de recursos para mostrar únicamente los procesos seleccionados"
+              title="Mostrar en las tarjetas de CPU y RAM el consumo sumado de los procesos seleccionados"
             >
               <span className="icono-accion">📊</span>
-              <span>{poligonofiltroActivo ? 'Analizando en Polígono' : 'Analizar en Polígono'}</span>
+              <span>{poligonofiltroActivo ? 'Analizando selección' : 'Analizar selección'}</span>
             </button>
 
             {/* 2. Filtrar tabla (Mostrar solo seleccionados) */}
@@ -532,9 +532,9 @@ export const TablaProcesos = ({
                         {analizandoEnPoligonoNombres?.includes(proc.name) && (
                           <span
                             className="badge-en-analisis"
-                            title="Incluido en el análisis activo del polígono"
+                            title="Incluido en el análisis de la selección"
                           >
-                            📈 En Polígono
+                            📈 En análisis
                           </span>
                         )}
                         {estaMonitoreado(proc.name) && (

@@ -37,3 +37,106 @@
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+/* =========================================
+   TARJETA CON MINI-GRÁFICO (CPU / RAM)
+   ========================================= */
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.metric-badge-filtro {
+  font-size: 0.65rem;
+  font-weight: 600;
+  background-color: rgba(200, 180, 76, 0.18);
+  border: 1px solid rgba(200, 180, 76, 0.4);
+  color: #f1e16b;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+/* La tarjeta es un botón para poder ampliar el gráfico */
+.metric-card-ampliable {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.metric-card-ampliable:hover {
+  border-color: var(--accent-cyan);
+}
+
+.metric-card-ampliable:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+}
+
+.metric-sparkline {
+  width: 100%;
+  height: 56px;
+  display: block;
+  overflow: visible;
+}
+
+.sparkline-linea {
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.sparkline-linea.cpu {
+  stroke: #c7b44c;
+}
+
+.sparkline-linea.ram {
+  stroke: #619242;
+}
+
+.sparkline-area.cpu {
+  fill: rgba(199, 180, 76, 0.15);
+}
+
+.sparkline-area.ram {
+  fill: rgba(97, 146, 66, 0.15);
+}
+
+.sparkline-umbral {
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.sparkline-umbral.advertencia {
+  stroke: rgba(251, 191, 36, 0.55);
+}
+
+.sparkline-umbral.critico {
+  stroke: rgba(248, 113, 113, 0.6);
+}
+
+.metric-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.85rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.metric-stats strong {
+  color: var(--text-main);
+  font-family: var(--font-mono);
+}
+
+.metric-muestras {
+  margin-left: auto;
+  font-size: 0.68rem;
+}
