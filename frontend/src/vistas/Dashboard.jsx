@@ -11,8 +11,12 @@ import { getStoredTags, saveStoredTags } from '../services/procesos';
 import { 
   obtenerMisUmbralesService, 
   obtenerDatosAlertas, 
-  reconocerAlertaService, 
-  eliminarEventoService 
+  reconocerAlertaService,
+  eliminarEventoService,
+  listarReglasService,
+  crearAlertaProcesoService,
+  actualizarReglaService,
+  eliminarReglaService
 } from '../services/alertas';
 import './Dashboard.css';
 
@@ -65,13 +69,20 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
   };
 
   // Función para obtener los eventos y reglas reales del servidor
+  const cargarReglasAlertas = useCallback(async () => {
+    const resultado = await listarReglasService();
+    if (resultado.success) {
+      setReglasAlertas(resultado.reglas);
+    }
+  }, []);
+
   const cargarAlertasReales = useCallback(async () => {
     const resultado = await obtenerDatosAlertas();
     if (resultado.success) {
       setAlertas(resultado.eventos);
-      setReglasAlertas(resultado.reglas);
     }
-  }, []);
+    cargarReglasAlertas();
+  }, [cargarReglasAlertas]);
 
   const actualizarInformacion = useCallback(async () => {
     const datos = await obtenerDatosYMetricas();
@@ -230,7 +241,26 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
     }
   };
 
-  const conteoAlertasNoReconocidas = alertas.filter((a) => a.estadoEntrega === 'No reconocido').length;
+  // Reglas de alerta por proceso: cada acción recarga las reglas y devuelve el resultado para que el panel muestre el error
+  const handleCrearAlertaProceso = async (nombreProceso, tipo, valorLimite) => {
+    const res = await crearAlertaProcesoService(nombreProceso, tipo, valorLimite);
+    if (res.success) cargarReglasAlertas();
+    return res;
+  };
+
+  const handleActualizarReglaAlerta = async (alertaId, cambios) => {
+    const res = await actualizarReglaService(alertaId, cambios);
+    if (res.success) cargarReglasAlertas();
+    return res;
+  };
+
+  const handleEliminarReglaAlerta = async (alertaId) => {
+    const res = await eliminarReglaService(alertaId);
+    if (res.success) cargarReglasAlertas();
+    return res;
+  };
+
+  const conteoAlertasNoReconocidas =alertas.filter((a) => a.estadoEntrega === 'No reconocido').length;
   const esAdministrador = usuario?.rol === 'Administrador';
 
   return (
@@ -301,6 +331,11 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
                       proceso={procesoSeleccionado}
                       onAddTag={handleAddTagToProcess}
                       onRemoveTag={handleRemoveTagFromProcess}
+                      reglasAlertas={reglasAlertas}
+                      esAdmin={esAdministrador}
+                      onCrearAlerta={handleCrearAlertaProceso}
+                      onActualizarAlerta={handleActualizarReglaAlerta}
+                      onEliminarAlerta={handleEliminarReglaAlerta}
                     />
                   </aside>
                 )}

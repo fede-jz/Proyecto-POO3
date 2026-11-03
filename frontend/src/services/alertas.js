@@ -62,7 +62,7 @@ export async function obtenerDatosAlertas() {
       };
     });
 
-    // Las reglas no se usan en el front; se devuelve vacío para mantener el formato que espera el Dashboard
+    // Las reglas se cargan aparte con listarReglasService; se devuelve vacío para mantener el formato
     return {
       success: true,
       reglas: [],
@@ -172,4 +172,121 @@ export async function guardarMisUmbralesService(cpu, ram) {
     throw new Error(data.detail || "Error al actualizar los umbrales.");
   }
   return data;
+}
+
+/**
+ * Lee la respuesta del servidor sin romperse si no es JSON (por ejemplo un 500 en texto plano)
+ * y arma un mensaje de error legible a partir del "detail" de FastAPI
+ */
+async function leerRespuesta(respuesta, mensajePorDefecto) {
+  let datos;
+  try {
+    datos = await respuesta.json();
+  } catch {
+    datos = null;
+  }
+
+  if (respuesta.ok) {
+    return { success: true, datos };
+  }
+
+  let mensaje = mensajePorDefecto;
+  if (typeof datos?.detail === "string") {
+    mensaje = datos.detail;
+  } else if (Array.isArray(datos?.detail) && datos.detail.length > 0) {
+    // Errores de validación (422): se muestra el primero sin el prefijo "Value error, "
+    mensaje = String(datos.detail[0].msg || mensajePorDefecto).replace(/^Value error, /, "");
+  }
+  return { success: false, mensaje };
+}
+
+/**
+ * Obtiene todas las reglas de alerta (globales y por proceso)
+ */
+export async function listarReglasService() {
+  const token = obtenerToken();
+  if (!token) return { success: false, reglas: [] };
+
+  try {
+    const respuesta = await fetch(`${API_URL}/alertas/`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+    const resultado = await leerRespuesta(respuesta, "Error al obtener las alertas.");
+    return { ...resultado, reglas: resultado.success ? resultado.datos : [] };
+  } catch (error) {
+    console.error("Error de red al obtener las reglas de alerta:", error);
+    return { success: false, reglas: [], mensaje: "Error de conexión con el servidor" };
+  }
+}
+
+/**
+ * Crea una alerta sobre un proceso (requiere rol Administrador).
+ * tipo: 'caida' | 'cpu' | 'ram'. valorLimite solo para cpu/ram
+ */
+export async function crearAlertaProcesoService(nombreProceso, tipo, valorLimite) {
+  const token = obtenerToken();
+  try {
+    const respuesta = await fetch(`${API_URL}/alertas/`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        nombre_proceso: nombreProceso,
+        tipo,
+        valor_limite: tipo === "caida" ? null : parseFloat(valorLimite),
+      }),
+    });
+    const resultado = await leerRespuesta(respuesta, "Error al crear la alerta.");
+    return { ...resultado, alerta: resultado.datos };
+  } catch (error) {
+    console.error("Error de red al crear la alerta:", error);
+    return { success: false, mensaje: "Error de conexión con el servidor" };
+  }
+}
+
+/**
+ * Cambia el límite y/o activa o desactiva una alerta (requiere rol Administrador).
+ * cambios: { valor_limite?, activo? }
+ */
+export async function actualizarReglaService(alertaId, cambios) {
+  const token = obtenerToken();
+  try {
+    const respuesta = await fetch(`${API_URL}/alertas/${alertaId}`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(cambios),
+    });
+    const resultado = await leerRespuesta(respuesta, "Error al actualizar la alerta.");
+    return { ...resultado, alerta: resultado.datos };
+  } catch (error) {
+    console.error("Error de red al actualizar la alerta:", error);
+    return { success: false, mensaje: "Error de conexión con el servidor" };
+  }
+}
+
+/**
+ * Elimina una alerta junto con sus eventos (requiere rol Administrador)
+ */
+export async function eliminarReglaService(alertaId) {
+  const token = obtenerToken();
+  try {
+    const respuesta = await fetch(`${API_URL}/alertas/${alertaId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+    return await leerRespuesta(respuesta, "Error al eliminar la alerta.");
+  } catch (error) {
+    console.error("Error de red al eliminar la alerta:", error);
+    return { success: false, mensaje: "Error de conexión con el servidor" };
+  }
 }

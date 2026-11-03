@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
+import { AlertasProceso } from '../AlertasProceso/AlertasProceso';
 import './GraficoIndividual.css';
 
 const PRESET_TAGS = ['Base de Datos', 'Web', 'Sistema', 'Desarrollo', 'Crítico', 'Segundo Plano'];
+
+// El backend guarda los procesos con ".exe" y en minúsculas/mayúsculas tal cual; se compara sin eso
+const normalizarNombre = (nombre) => String(nombre || '').trim().toLowerCase().replace(/\.exe$/, '');
 
 export const GraficoIndividual = ({
   proceso,
   onAddTag,
   onRemoveTag,
+  reglasAlertas = [],
+  esAdmin = false,
+  onCrearAlerta,
+  onActualizarAlerta,
+  onEliminarAlerta,
 }) => {
   const [nuevaEtiqueta, setNuevaEtiqueta] = useState('');
   const [mostrarInputTag, setMostrarInputTag] = useState(false);
@@ -23,6 +32,9 @@ export const GraficoIndividual = ({
   }
 
   const tags = proceso.tags || [];
+  const reglasDelProceso = reglasAlertas.filter(
+    (regla) => regla.proceso_id && normalizarNombre(regla.nombre_proceso) === normalizarNombre(proceso.name)
+  );
 
   const handleAgregar = (tagAAgregar) => {
     const cleanTag = tagAAgregar.trim();
@@ -173,6 +185,17 @@ export const GraficoIndividual = ({
           </div>
         </div>
       </div>
+
+      {/* Alertas configuradas sobre este proceso (key: se reinicia el formulario al cambiar de proceso) */}
+      <AlertasProceso
+        key={proceso.name}
+        nombreProceso={proceso.name}
+        reglas={reglasDelProceso}
+        esAdmin={esAdmin}
+        onCrear={onCrearAlerta}
+        onActualizar={onActualizarAlerta}
+        onEliminar={onEliminarAlerta}
+      />
     </div>
   );
 };

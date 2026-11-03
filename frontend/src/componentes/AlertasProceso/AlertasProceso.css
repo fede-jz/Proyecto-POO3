@@ -1,0 +1,256 @@
+/* =========================================
+   ALERTAS DEL PROCESO (dentro de Inspección de Proceso)
+   ========================================= */
+
+.seccion-alertas-proceso {
+  background-color: var(--bg-input, #020617);
+  border: 1px solid var(--bg-hover, #1e293b);
+  border-radius: 8px;
+  padding: 0.625rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.header-alertas-proceso {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-abrir-nueva-alerta {
+  background-color: transparent;
+  border: 1px solid var(--border-strong, #334155);
+  color: var(--accent-cyan, #38bdf8);
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-abrir-nueva-alerta:hover {
+  background-color: var(--bg-hover, #1e293b);
+  border-color: var(--accent-cyan, #38bdf8);
+}
+
+/* Lista de alertas */
+.lista-alertas-proceso {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.item-alerta-proceso {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--bg-hover, #1e293b);
+  border-radius: 6px;
+  background-color: var(--bg-card, #161d26);
+}
+
+.item-alerta-proceso.inactiva {
+  opacity: 0.6;
+}
+
+.info-alerta-proceso {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.badge-tipo-alerta {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.badge-tipo-alerta.tipo-caida {
+  background-color: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: var(--accent-red, #f87171);
+}
+
+.badge-tipo-alerta.tipo-cpu {
+  background-color: rgba(217, 119, 6, 0.15);
+  border-color: rgba(217, 119, 6, 0.4);
+  color: var(--accent-amber, #fbbf24);
+}
+
+.badge-tipo-alerta.tipo-ram {
+  background-color: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: var(--accent-emerald, #34d399);
+}
+
+.limite-alerta {
+  font-size: 0.75rem;
+  color: var(--text-main, #e2e8f0);
+}
+
+.estado-alerta-proceso {
+  font-size: 0.65rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 9999px;
+}
+
+.estado-alerta-proceso.activa {
+  color: var(--accent-green, #4ade80);
+  background-color: rgba(74, 222, 128, 0.12);
+}
+
+.estado-alerta-proceso.pausada {
+  color: var(--text-muted, #94a3b8);
+  background-color: rgba(148, 163, 184, 0.12);
+}
+
+/* Acciones (solo administradores) */
+.acciones-alerta-proceso {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btn-accion-alerta-proceso {
+  background: transparent;
+  border: 1px solid var(--border-strong, #334155);
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+  line-height: 1;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-accion-alerta-proceso:hover:not(:disabled) {
+  color: var(--accent-cyan, #38bdf8);
+  border-color: var(--accent-cyan, #38bdf8);
+}
+
+.btn-accion-alerta-proceso.peligro:hover:not(:disabled) {
+  color: var(--accent-red, #f87171);
+  border-color: var(--accent-red, #f87171);
+}
+
+.btn-accion-alerta-proceso:disabled,
+.btn-confirmar-eliminar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.texto-confirmar-eliminar {
+  font-size: 0.7rem;
+  color: var(--accent-red, #f87171);
+}
+
+.btn-confirmar-eliminar {
+  background-color: #dc2626;
+  border: none;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-confirmar-eliminar:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+/* Edición del límite y formulario de nueva alerta */
+.editor-limite-alerta,
+.campo-limite-alerta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.input-limite-alerta {
+  width: 3.5rem;
+  background-color: var(--bg-primary, #090c10);
+  border: 1px solid var(--border-strong, #334155);
+  color: var(--text-main, #f1f5f9);
+  font-size: 0.75rem;
+  padding: 0.2rem 0.35rem;
+  border-radius: 4px;
+  outline: none;
+}
+
+.input-limite-alerta:focus {
+  border-color: var(--accent-cyan, #38bdf8);
+}
+
+.form-nueva-alerta-proceso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--bg-hover, #1e293b);
+}
+
+.selector-tipo-alerta {
+  display: flex;
+  gap: 0.25rem;
+  background-color: var(--bg-secondary, #0b0f14);
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #242c36);
+}
+
+.btn-tipo-alerta {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.7rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-tipo-alerta.activo {
+  background-color: var(--border-color, #242c36);
+  color: var(--accent-cyan, #38bdf8);
+  font-weight: 600;
+}
+
+.botones-nueva-alerta {
+  display: flex;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.btn-guardar-tag:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-alertas-proceso {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--accent-red, #f87171);
+}
+
+.aviso-solo-admin {
+  font-size: 0.7rem;
+  color: var(--text-subtle, #64748b);
+  font-style: italic;
+}
