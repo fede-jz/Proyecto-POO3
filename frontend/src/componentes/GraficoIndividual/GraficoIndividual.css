@@ -11,30 +11,11 @@
   gap: 1rem;
 }
 
-.grafico-individual-container.placeholder {
-  justify-content: center;
-  align-items: center;
-  min-height: 220px;
-}
-
-.placeholder-content {
-  text-align: center;
-  color: var(--text-subtle);
-  font-size: 0.875rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.icono-cursor {
-  font-size: 1.5rem;
-}
-
 .header-inspeccion {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border-strong) 40%, transparent);
   padding-bottom: 0.75rem;
 }
@@ -53,6 +34,22 @@
   padding: 0.2rem 0.6rem;
   border-radius: 9999px;
   font-family: monospace;
+  white-space: nowrap;
+}
+
+.badge-activo.detenido {
+  background-color: color-mix(in srgb, var(--accent-red) 15%, transparent);
+  color: var(--accent-red);
+}
+
+/* =========================================
+   DATOS DEL PROCESO (nombre, PIDs y uso)
+   ========================================= */
+
+.datos-proceso {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .detalles-proceso {
@@ -81,12 +78,13 @@
   word-break: break-all;
 }
 
-/* Contenedor específico para los PIDs largos con scroll interno limpio */
+/* PIDs: como máximo dos renglones visibles, el resto con scroll interno */
 .valor-pids {
-  max-height: 90px;           
-  overflow-y: auto;            
-  word-break: break-all;      
-  max-width: 60%;             
+  max-height: calc(2 * 1.4em + 0.7rem);
+  line-height: 1.4;
+  overflow-y: auto;
+  word-break: break-all;
+  max-width: 60%;
   text-align: right;
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
@@ -96,114 +94,9 @@
   color: var(--text-secondary);
 }
 
-/* =========================================
-   SECCIÓN DE ETIQUETAS EN INSPECCIÓN
-   ========================================= */
-
-.seccion-etiquetas-inspeccion {
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.625rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.header-tags-inspeccion {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.btn-abrir-add-tag {
-  background-color: transparent;
-  border: 1px solid var(--border-strong);
-  color: var(--accent-cyan);
-  font-size: 0.7rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-abrir-add-tag:hover {
-  background-color: var(--bg-hover);
-  border-color: var(--accent-cyan);
-}
-
-.lista-tags-inspeccion {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  align-items: center;
-}
-
-.badge-etiqueta-inspeccion {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  background-color: color-mix(in srgb, var(--accent-cyan) 15%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent-cyan) 35%, transparent);
-  color: var(--accent-cyan);
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-}
-
-.tag-texto {
-  line-height: 1;
-}
-
-.btn-eliminar-tag {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  cursor: pointer;
-  line-height: 1;
-  padding: 0;
-  transition: color 0.15s ease;
-}
-
-.btn-eliminar-tag:hover {
-  color: var(--accent-red);
-}
-
-.sin-etiquetas-aviso {
-  color: var(--text-subtle);
-  font-size: 0.75rem;
-  font-style: italic;
-}
-
-.form-agregar-tag-inspeccion {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  align-items: center;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border-color);
-}
-
-.input-tag-inspeccion {
-  flex: 1;
-  min-width: 110px;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-strong);
-  color: var(--text-main);
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  outline: none;
-}
-
-.input-tag-inspeccion:focus {
-  border-color: var(--accent-cyan);
-}
-
+/* Botones compartidos con los formularios del detalle (alertas) */
 .btn-guardar-tag {
-  background-color: #2563eb;
+  background-color: var(--accent-blue);
   border: none;
   color: var(--on-accent);
   font-size: 0.7rem;
@@ -227,28 +120,10 @@
   color: var(--text-main);
 }
 
-.sugerencias-rapidas-inspeccion {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  margin-top: 0.25rem;
-}
-
-.btn-preset-tag {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
-  font-size: 0.65rem;
-  padding: 0.15rem 0.4rem;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.btn-preset-tag:hover {
-  background-color: var(--bg-hover);
-  color: var(--accent-cyan);
-  border-color: var(--accent-cyan);
+.sin-etiquetas-aviso {
+  color: var(--text-subtle);
+  font-size: 0.75rem;
+  font-style: italic;
 }
 
 /* =========================================
@@ -259,7 +134,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
-  margin-top: 0.5rem;
 }
 
 .barra-grupo {
@@ -306,6 +180,6 @@
 }
 
 .ram-valor {
-  color: #619242;
+  color: var(--color-ram);
   font-weight: 600;
 }

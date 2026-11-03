@@ -1,0 +1,315 @@
+/* =========================================
+   HISTORIAL DE CONSUMO DE UN PROCESO
+   ========================================= */
+
+/* Sección dentro de la tarjeta de detalle del proceso (sin borde propio) */
+.card-historial {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  color: var(--text-main, #f1f5f9);
+}
+
+.historial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.historial-header h4 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted, #94a3b8);
+  margin: 0;
+}
+
+.badge-sin-monitoreo {
+  background-color: color-mix(in srgb, var(--text-muted) 15%, transparent);
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.7rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+}
+
+.selector-rango-historial {
+  display: flex;
+  gap: 0.2rem;
+  background-color: var(--bg-input, #020617);
+  border: 1px solid var(--bg-hover, #1e293b);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.selector-rango-historial button {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.selector-rango-historial button.activo {
+  background-color: var(--border-color, #242c36);
+  color: var(--accent-cyan, #38bdf8);
+  font-weight: 600;
+}
+
+/* Gráfico */
+.historial-svg-container {
+  position: relative;
+  background-color: var(--bg-input, #020617);
+  border: 1px solid var(--bg-hover, #1e293b);
+  border-radius: 8px;
+  padding: 0.25rem;
+}
+
+.svg-historial {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.grid-line-historial {
+  stroke: color-mix(in srgb, var(--border-strong) 50%, transparent);
+  stroke-dasharray: 3 3;
+}
+
+.eje-label-historial {
+  fill: var(--text-subtle, #64748b);
+  font-size: 9px;
+}
+
+.linea-historial {
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+}
+
+.linea-historial.cpu {
+  stroke: var(--color-cpu);
+}
+
+.linea-historial.ram {
+  stroke: var(--color-ram);
+}
+
+.zona-hover-historial {
+  fill: transparent;
+  cursor: crosshair;
+}
+
+.zona-hover-historial:hover {
+  fill: color-mix(in srgb, var(--accent-cyan) 8%, transparent);
+}
+
+.tooltip-historial {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background-color: color-mix(in srgb, var(--bg-secondary) 92%, transparent);
+  border: 1px solid var(--border-strong, #334155);
+  border-radius: 6px;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.7rem;
+  color: var(--text-muted, #94a3b8);
+  pointer-events: none;
+}
+
+.tooltip-historial .cpu {
+  color: var(--color-cpu-fuerte);
+}
+
+.tooltip-historial .ram {
+  color: var(--color-ram-texto);
+}
+
+.historial-sin-datos {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.8rem;
+  color: var(--text-subtle, #64748b);
+}
+
+.eje-x-historial {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-subtle, #64748b);
+  margin-top: -0.35rem;
+}
+
+/* Estadísticas */
+.stats-historial {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.stat-historial {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--bg-input, #020617);
+  border: 1px solid var(--bg-hover, #1e293b);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.stat-historial strong {
+  color: var(--text-main, #e2e8f0);
+}
+
+.titulo-stat {
+  font-weight: 700;
+}
+
+.titulo-stat.cpu {
+  color: var(--color-cpu-fuerte);
+}
+
+.titulo-stat.ram {
+  color: var(--color-ram-texto);
+}
+
+/* Proceso sin monitorear */
+.historial-sin-monitoreo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.6rem;
+  padding: 1rem 0.5rem;
+  background-color: var(--bg-input, #020617);
+  border: 1px dashed var(--border-strong, #334155);
+  border-radius: 8px;
+}
+
+.icono-historial {
+  font-size: 1.5rem;
+}
+
+.historial-sin-monitoreo p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text-muted, #94a3b8);
+  max-width: 340px;
+}
+
+.btn-monitorear {
+  background-color: var(--accent-blue);
+  border: none;
+  color: var(--on-accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-monitorear:hover:not(:disabled) {
+  background-color: var(--accent-blue-hover);
+}
+
+.btn-monitorear:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Dejar de monitorear (solo administradores) */
+.pie-historial {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--border-strong) 40%, transparent);
+}
+
+.btn-dejar-monitorear {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--accent-red) 40%, transparent);
+  color: var(--accent-red, #f87171);
+  font-size: 0.72rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-dejar-monitorear:hover {
+  background-color: color-mix(in srgb, var(--accent-red) 15%, transparent);
+  border-color: var(--accent-red);
+}
+
+.confirmar-dejar-monitorear {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background-color: color-mix(in srgb, var(--accent-red) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-red) 35%, transparent);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+}
+
+.confirmar-dejar-monitorear p {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-main, #e2e8f0);
+}
+
+.botones-confirmar-dejar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.btn-confirmar-dejar {
+  background-color: #dc2626;
+  border: none;
+  color: var(--on-accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-confirmar-dejar:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+.btn-confirmar-dejar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-cancelar-dejar {
+  background: transparent;
+  border: 1px solid var(--border-strong, #334155);
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.72rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.error-historial {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--accent-red, #f87171);
+}

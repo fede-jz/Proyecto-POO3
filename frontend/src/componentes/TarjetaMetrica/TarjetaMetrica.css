@@ -37,3 +37,141 @@
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+/* =========================================
+   TARJETA CON MINI-GRÁFICO (CPU / RAM)
+   ========================================= */
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.metric-badge-filtro {
+  font-size: 0.65rem;
+  font-weight: 600;
+  background-color: color-mix(in srgb, var(--color-cpu) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-cpu) 40%, transparent);
+  color: var(--color-cpu-texto);
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+/* La tarjeta es un botón para poder ampliar el gráfico */
+.metric-card-ampliable {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.metric-card-ampliable:hover {
+  border-color: var(--accent-cyan);
+}
+
+.metric-card-ampliable:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+}
+
+.metric-sparkline {
+  width: 100%;
+  height: 56px;
+  display: block;
+  overflow: visible;
+}
+
+.sparkline-linea {
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.sparkline-linea.cpu {
+  stroke: var(--color-cpu);
+}
+
+.sparkline-linea.ram {
+  stroke: var(--color-ram);
+}
+
+.sparkline-area.cpu {
+  fill: color-mix(in srgb, var(--color-cpu) 15%, transparent);
+}
+
+.sparkline-area.ram {
+  fill: color-mix(in srgb, var(--color-ram) 15%, transparent);
+}
+
+/* Umbral global de la métrica (el mismo que se configura en Ajustes) */
+.sparkline-umbral {
+  stroke: color-mix(in srgb, var(--accent-red) 70%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.metric-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.85rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.metric-stats strong {
+  color: var(--text-main);
+  font-family: var(--font-mono);
+}
+
+.metric-umbral {
+  margin-left: auto;
+}
+
+.metric-umbral strong {
+  color: var(--accent-red);
+}
+
+/* El subtítulo queda abajo de todo para que las tres tarjetas se vean parejas */
+.metric-card {
+  justify-content: flex-start;
+}
+
+.metric-subtitle {
+  margin-top: auto;
+}
+
+/* Detalles extra (tarjeta de procesos) */
+.metric-detalles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.25rem 0 0;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.metric-detalle {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.metric-detalle dt {
+  color: var(--text-muted);
+}
+
+.metric-detalle dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-main);
+}

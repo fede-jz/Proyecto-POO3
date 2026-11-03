@@ -1,27 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './PoligonoRecursos.css';
 
+/**
+ * Gráfico ampliado de consumo (CPU/RAM) de las últimas muestras.
+ * Se abre en un modal al hacer clic en las tarjetas de CPU o RAM del Dashboard.
+ */
 export const PoligonoRecursos = ({
   historial = [],
-  umbralAdvertencia = 80,
-  umbralCritico = 90,
+  umbralCpu = null,
+  umbralRam = null,
   filtroProcesosNombres = null,
   onRestablecerFiltro,
+  metricaInicial = 'ambas',
+  onCerrar,
 }) => {
-  const [metricaSeleccionada, setMetricaSeleccionada] = useState('ambas');
+  const [metricaSeleccionada, setMetricaSeleccionada] = useState(metricaInicial);
   const [puntoHover, setPuntoHover] = useState(null);
-  const [maximizado, setMaximizado] = useState(false);
+  // Siempre se muestra ampliado: la vista chica ahora son las tarjetas de CPU y RAM
+  const maximizado = true;
 
-  // Escuchar tecla Escape para salir de modo maximizado
+  // Cerrar con Escape
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && maximizado) {
-        setMaximizado(false);
-      }
+      if (e.key === 'Escape' && onCerrar) onCerrar();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [maximizado]);
+  }, [onCerrar]);
+
+  // Mientras el gráfico ampliado está abierto se oculta el scroll de la página de atrás
+  useEffect(() => {
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+    };
+  }, []);
 
   const cantidadMuestras = historial.length;
   const cpuValores = historial.map((m) => m.cpu);
@@ -78,7 +92,7 @@ export const PoligonoRecursos = ({
       <div className="poligono-header">
         <div className="poligono-titulos">
           <div className="titulo-con-badge">
-            <h4>Polígono de Consumo</h4>
+            <h4>Consumo reciente</h4>
             {filtroProcesosNombres && filtroProcesosNombres.length > 0 ? (
               <span className="badge-modo-filtro" title={filtroProcesosNombres.join(', ')}>
                 Filtrado ({filtroProcesosNombres.length} proc)
@@ -89,7 +103,6 @@ export const PoligonoRecursos = ({
           </div>
           <p className="sub-poligono">
             Historial optimizado (últimas {cantidadMuestras}/30 muestras)
-            {maximizado ? ' • Modo pantalla completa' : ''}
           </p>
         </div>
 
@@ -119,19 +132,15 @@ export const PoligonoRecursos = ({
             </button>
           </div>
 
-          {/* Botón Maximizar / Minimizar */}
+          {/* Cerrar el gráfico ampliado */}
           <button
             type="button"
             className="btn-toggle-maximizar"
-            onClick={() => setMaximizado(!maximizado)}
-            title={maximizado ? 'Restaurar / Minimizar vista (Esc)' : 'Maximizar polígono a pantalla completa'}
-            aria-label={maximizado ? 'Minimizar' : 'Maximizar'}
+            onClick={onCerrar}
+            title="Cerrar (Esc)"
+            aria-label="Cerrar"
           >
-            {maximizado ? (
-              <span className="icono-max">🗗 Minimizar</span>
-            ) : (
-              <span className="icono-max">⛶</span>
-            )}
+            <span className="icono-max">✕ Cerrar</span>
           </button>
         </div>
       </div>
@@ -164,39 +173,45 @@ export const PoligonoRecursos = ({
           <svg viewBox={`0 0 ${width} ${height}`} className="svg-poligono">
             <defs>
               <linearGradient id="gradCpu" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#C7B44C" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#C7B44C" stopOpacity="0.0" />
+                <stop offset="0%" style={{ stopColor: 'var(--color-cpu)' }} stopOpacity="0.35" />
+                <stop offset="100%" style={{ stopColor: 'var(--color-cpu)' }} stopOpacity="0.0" />
               </linearGradient>
               <linearGradient id="gradRam" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#619242" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#619242" stopOpacity="0.0" />
+                <stop offset="0%" style={{ stopColor: 'var(--color-ram)' }} stopOpacity="0.35" />
+                <stop offset="100%" style={{ stopColor: 'var(--color-ram)' }} stopOpacity="0.0" />
               </linearGradient>
             </defs>
 
-            {/* Líneas de umbrales */}
-            <line
-              x1={padding}
-              y1={getY(umbralAdvertencia)}
-              x2={width - padding}
-              y2={getY(umbralAdvertencia)}
-              className="linea-umbral advertencia"
-            />
-            <line
-              x1={padding}
-              y1={getY(umbralCritico)}
-              x2={width - padding}
-              y2={getY(umbralCritico)}
-              className="linea-umbral critico"
-            />
-
-            {/* Texto de umbral en modo maximizado */}
-            {maximizado && (
+            {/* Umbral global de cada métrica visible (CPU en amarillo, RAM en verde, como sus líneas) */}
+            {umbralCpu != null && (metricaSeleccionada === 'cpu' || metricaSeleccionada === 'ambas') && (
               <>
-                <text x={width - padding - 85} y={getY(umbralCritico) - 5} className="label-umbral-critico">
-                  Crítico ({umbralCritico}%)
+                <line
+                  x1={padding}
+                  y1={getY(umbralCpu)}
+                  x2={width - padding}
+                  y2={getY(umbralCpu)}
+                  className="linea-umbral advertencia"
+                />
+                <text x={width - padding - 110} y={getY(umbralCpu) - 5} className="label-umbral-adv">
+                  Umbral CPU ({Number(umbralCpu).toFixed(0)}%)
                 </text>
-                <text x={width - padding - 105} y={getY(umbralAdvertencia) - 5} className="label-umbral-adv">
-                  Advertencia ({umbralAdvertencia}%)
+              </>
+            )}
+            {umbralRam != null && (metricaSeleccionada === 'ram' || metricaSeleccionada === 'ambas') && (
+              <>
+                <line
+                  x1={padding}
+                  y1={getY(umbralRam)}
+                  x2={width - padding}
+                  y2={getY(umbralRam)}
+                  className="linea-umbral umbral-ram"
+                />
+                <text
+                  x={width - padding - 110}
+                  y={getY(umbralRam) + (umbralCpu === umbralRam && metricaSeleccionada === 'ambas' ? 14 : -5)}
+                  className="label-umbral-ram"
+                >
+                  Umbral RAM ({Number(umbralRam).toFixed(0)}%)
                 </text>
               </>
             )}
@@ -301,19 +316,15 @@ export const PoligonoRecursos = ({
     </div>
   );
 
-  // Si está maximizado, renderizar en backdrop modal completo
-  if (maximizado) {
-    return (
-      <div
-        className="poligono-backdrop-overlay"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) setMaximizado(false);
-        }}
-      >
-        <div className="contenedor-modal-poligono">{contenidoCard}</div>
-      </div>
-    );
-  }
-
-  return contenidoCard;
+  // Se muestra en un modal de pantalla completa; clic fuera del gráfico lo cierra
+  return (
+    <div
+      className="poligono-backdrop-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && onCerrar) onCerrar();
+      }}
+    >
+      <div className="contenedor-modal-poligono">{contenidoCard}</div>
+    </div>
+  );
 };

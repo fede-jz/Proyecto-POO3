@@ -5,14 +5,25 @@ import { TablaProcesos } from '../componentes/TablaProcesos/TablaProcesos';
 import { TablaAlertas } from '../componentes/TablaAlertas/TablaAlertas';
 import { MenuAjustes } from '../componentes/MenuAjustes/MenuAjustes';
 import { obtenerDatosYMetricas } from '../controladores/gestorProcesos';
-import { GraficoIndividual } from '../componentes/GraficoIndividual/GraficoIndividual';
+import { PanelProceso } from '../componentes/PanelProceso/PanelProceso';
 import { PoligonoRecursos } from '../componentes/PoligonoRecursos/PoligonoRecursos';
-import { getStoredTags, saveStoredTags } from '../services/procesos';
+import {
+  getStoredTags,
+  saveStoredTags,
+  listarMonitoreadosService,
+  monitorearProcesoService,
+  dejarDeMonitorearService,
+  normalizarNombreProceso
+} from '../services/procesos';
 import { 
   obtenerMisUmbralesService, 
   obtenerDatosAlertas, 
-  reconocerAlertaService, 
-  eliminarEventoService 
+  reconocerAlertaService,
+  eliminarEventoService,
+  listarReglasService,
+  crearAlertaProcesoService,
+  actualizarReglaService,
+  eliminarReglaService
 } from '../services/alertas';
 import './Dashboard.css';
 
@@ -23,7 +34,8 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
   const [cpuTotal, setCpuTotal] = useState('0.0');
   const [ramTotal, setRamTotal] = useState('0.0');
   const [procesoSeleccionado, setProcesoSeleccionado] = useState(null);
-  const [sidebarAbierto, setSidebarAbierto] = useState(true);
+  // Gráfico ampliado de las tarjetas de CPU/RAM: null (cerrado), 'cpu' o 'ram'
+  const [graficoAmpliado, setGraficoAmpliado] = useState(null);
   const [horaServidor, setHoraServidor] = useState('');
   const [historialMuestras, setHistorialMuestras] = useState([]);
 
@@ -33,6 +45,9 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
   // Alertas dinámicas desde el backend de Supabase
   const [alertas, setAlertas] = useState([]);
   const [reglasAlertas, setReglasAlertas] = useState([]);
+
+  // Procesos monitoreados (los guardados en la base, a los que se les guarda historial)
+  const [procesosMonitoreados, setProcesosMonitoreados] = useState([]);
 
   const [selectedProcessNames, setSelectedProcessNames] = useState([]);
 
@@ -44,34 +59,52 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
   const tagsMapRef = useRef(tagsMap);
   tagsMapRef.current = tagsMap;
 
-  // Umbrales dinámicos (con setter para actualizar en tiempo real)
-  const [umbralAdvertencia, setUmbralAdvertencia] = useState(80);
-  const [umbralCritico] = useState(90);
+  // Umbrales globales del servidor: cada tarjeta muestra el suyo (null = no hay alerta global de ese tipo)
+  const [umbralCpu, setUmbralCpu] = useState(null);
+  const [umbralRam, setUmbralRam] = useState(null);
 
-  // Cargar el umbral personalizado del usuario al iniciar el dashboard
+  // Cargar los umbrales globales al iniciar el dashboard
   useEffect(() => {
-    async function cargarUmbralesUsuario() {
+    async function cargarUmbralesGlobales() {
       const umbrales = await obtenerMisUmbralesService();
-      if (umbrales && umbrales.cpu) {
-        setUmbralAdvertencia(umbrales.cpu);
+      if (umbrales) {
+        setUmbralCpu(umbrales.cpu ?? null);
+        setUmbralRam(umbrales.ram ?? null);
       }
     }
-    cargarUmbralesUsuario();
+    cargarUmbralesGlobales();
   }, []);
 
-  // Función que actualiza el gráfico de polígonos al guardar en ajustes
+  // Al guardar los umbrales en Ajustes se actualizan las líneas de las tarjetas
   const handleUmbralesActualizados = (nuevosUmbrales) => {
-    setUmbralAdvertencia(nuevosUmbrales.cpu);
+    setUmbralCpu(nuevosUmbrales.cpu);
+    setUmbralRam(nuevosUmbrales.ram);
   };
 
   // Función para obtener los eventos y reglas reales del servidor
+  const cargarReglasAlertas = useCallback(async () => {
+    const resultado = await listarReglasService();
+    if (resultado.success) {
+      setReglasAlertas(resultado.reglas);
+    }
+  }, []);
+
+  const cargarMonitoreados = useCallback(async () => {
+    const resultado = await listarMonitoreadosService();
+    if (resultado.success) {
+      setProcesosMonitoreados(resultado.procesos);
+    }
+  }, []);
+
   const cargarAlertasReales = useCallback(async () => {
     const resultado = await obtenerDatosAlertas();
     if (resultado.success) {
       setAlertas(resultado.eventos);
-      setReglasAlertas(resultado.reglas);
     }
-  }, []);
+    cargarReglasAlertas();
+    // Crear una alerta guarda el proceso en la base, así que también puede cambiar la lista de monitoreados
+    cargarMonitoreados();
+  }, [cargarReglasAlertas, cargarMonitoreados]);
 
   const actualizarInformacion = useCallback(async () => {
     const datos = await obtenerDatosYMetricas();
@@ -88,10 +121,13 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
     setCpuTotal(datos.cpuTotal);
     setRamTotal(datos.ramTotal);
 
+    // Si el proceso abierto dejó de correr se sigue mostrando (puede ser uno monitoreado), pero sin consumo
     setProcesoSeleccionado((prev) => {
       if (!prev) return null;
       const matched = procesosConEtiquetas.find((p) => p.name === prev.name);
-      return matched || prev;
+      return matched
+        ? { ...matched, enEjecucion: true }
+        : { ...prev, pids: [], cpu_percent: 0, memory_percent: 0, enEjecucion: false };
     });
 
     const filtroActivo = polygonFilteredRef.current;
@@ -180,37 +216,6 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
     );
   };
 
-  const handleAddTagToProcess = (processName, tag) => {
-    const updatedMap = { ...tagsMapRef.current };
-    const existing = updatedMap[processName] || [];
-    if (!existing.includes(tag)) {
-      updatedMap[processName] = [...existing, tag];
-      saveStoredTags(updatedMap);
-      setTagsMap(updatedMap);
-
-      setProcesos((prev) =>
-        prev.map((p) => (p.name === processName ? { ...p, tags: updatedMap[processName] } : p))
-      );
-    }
-  };
-
-  const handleRemoveTagFromProcess = (processName, tag) => {
-    const updatedMap = { ...tagsMapRef.current };
-    const existing = updatedMap[processName] || [];
-    updatedMap[processName] = existing.filter((t) => t !== tag);
-    saveStoredTags(updatedMap);
-    setTagsMap(updatedMap);
-
-    setProcesos((prev) =>
-      prev.map((p) => (p.name === processName ? { ...p, tags: updatedMap[processName] } : p))
-    );
-  };
-
-  const handleActualizarAlerta = (alertaActualizada) => {
-    const actualizadas = alertas.map((a) => (a.id === alertaActualizada.id ? alertaActualizada : a));
-    setAlertas(actualizadas);
-  };
-
   const handleMarcarReconocidas = async (ids) => {
     for (const idFormateado of ids) {
       const alertaEncontrada = alertas.find((a) => a.id === idFormateado);
@@ -230,6 +235,77 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
     }
   };
 
+  // Reglas de alerta por proceso: cada acción recarga las reglas y devuelve el resultado para que el panel muestre el error
+  const handleCrearAlertaProceso = async (nombreProceso, tipo, valorLimite) => {
+    const res = await crearAlertaProcesoService(nombreProceso, tipo, valorLimite);
+    if (res.success) cargarReglasAlertas();
+    return res;
+  };
+
+  const handleActualizarReglaAlerta = async (alertaId, cambios) => {
+    const res = await actualizarReglaService(alertaId, cambios);
+    if (res.success) cargarReglasAlertas();
+    return res;
+  };
+
+  const handleEliminarReglaAlerta = async (alertaId) => {
+    const res = await eliminarReglaService(alertaId);
+    if (res.success) cargarReglasAlertas();
+    return res;
+  };
+
+  const handleMonitorearProceso = async (nombreProceso) => {
+    const res = await monitorearProcesoService(nombreProceso);
+    if (res.success) cargarMonitoreados();
+    return res;
+  };
+
+  // Dejar de monitorear borra el proceso de la base junto con su historial y sus alertas
+  const handleDejarDeMonitorear = async (procesoId) => {
+    const res = await dejarDeMonitorearService(procesoId);
+    if (res.success) {
+      cargarMonitoreados();
+      cargarReglasAlertas();
+    }
+    return res;
+  };
+
+  // Al presionar un proceso se abre su detalle en la columna derecha.
+  // Los monitoreados que están detenidos llegan sin consumo y con enEjecucion en false
+  const handleSeleccionarProceso = (proc) => {
+    setProcesoSeleccionado({
+      ...proc,
+      tags: proc.tags?.length ? proc.tags : tagsMapRef.current[proc.name] || [],
+      enEjecucion: proc.enEjecucion !== false,
+    });
+  };
+
+  // Para la tarjeta de procesos: cuántos de los monitoreados están corriendo ahora
+  const nombresEnEjecucion = new Set(procesos.map((p) => normalizarNombreProceso(p.name)));
+  const monitoreadosEnEjecucion = procesosMonitoreados.filter((p) =>
+    nombresEnEjecucion.has(normalizarNombreProceso(p.nombre))
+  ).length;
+
+  const handleCerrarGraficoAmpliado = useCallback(() => setGraficoAmpliado(null), []);
+
+  // Con "Analizar selección" activo, las tarjetas muestran la suma de los procesos seleccionados
+  // (la última muestra del historial ya se calcula filtrada en actualizarInformacion)
+  const analizandoSeleccion = Boolean(polygonFilteredNames && polygonFilteredNames.length > 0);
+  const ultimaMuestra = historialMuestras[historialMuestras.length - 1];
+  const cpuMostrado = analizandoSeleccion && ultimaMuestra ? ultimaMuestra.cpu.toFixed(1) : cpuTotal;
+  const ramMostrado = analizandoSeleccion && ultimaMuestra ? ultimaMuestra.ram.toFixed(1) : ramTotal;
+  const etiquetaFiltro = analizandoSeleccion
+    ? `Selección (${polygonFilteredNames.length} ${polygonFilteredNames.length === 1 ? 'proceso' : 'procesos'})`
+    : null;
+
+  const handleCerrarPanelProceso = useCallback(() => setProcesoSeleccionado(null), []);
+
+  const procesoMonitoreadoSeleccionado = procesoSeleccionado
+    ? procesosMonitoreados.find(
+        (p) => normalizarNombreProceso(p.nombre) === normalizarNombreProceso(procesoSeleccionado.name)
+      ) || null
+    : null;
+
   const conteoAlertasNoReconocidas = alertas.filter((a) => a.estadoEntrega === 'No reconocido').length;
   const esAdministrador = usuario?.rol === 'Administrador';
 
@@ -243,68 +319,102 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
         conteoAlertasNoReconocidas={conteoAlertasNoReconocidas}
       />
 
-      <div className="pm-user-bar">
-        <span className="pm-user-info">
-          Sesión activa: <strong className="pm-user-highlight">{usuario?.nombre || usuario?.email}</strong>
-        </span>
-        <button onClick={onCerrarSesion} className="pm-btn-logout">
-          Cerrar sesión
-        </button>
-      </div>
-
       <main className="main-content">
         {vistaActiva === 'procesos' && (
           <>
+            {/* Aviso cuando las tarjetas muestran solo el consumo de los procesos seleccionados */}
+            {analizandoSeleccion && (
+              <div className="banner-analisis-seleccion">
+                <span>
+                  📊 Analizando el consumo de: <strong>{polygonFilteredNames.join(', ')}</strong>
+                </span>
+                <button type="button" className="btn-restablecer-analisis" onClick={handleResetPolygonFilter}>
+                  Restablecer a General
+                </button>
+              </div>
+            )}
+
             <section className="metrics-grid">
-              <TarjetaMetrica title="CPU Total Usado" value={cpuTotal} unit="%" subtitle="" />
-              <TarjetaMetrica title="Memoria RAM Usada" value={ramTotal} unit="%" subtitle="" />
+              <TarjetaMetrica
+                title={analizandoSeleccion ? 'CPU de la Selección' : 'CPU Total Usado'}
+                value={cpuMostrado}
+                unit="%"
+                valores={historialMuestras.map((m) => m.cpu)}
+                serie="cpu"
+                umbral={umbralCpu}
+                etiquetaFiltro={etiquetaFiltro}
+                onAmpliar={() => setGraficoAmpliado('cpu')}
+              />
+              <TarjetaMetrica
+                title={analizandoSeleccion ? 'RAM de la Selección' : 'Memoria RAM Usada'}
+                value={ramMostrado}
+                unit="%"
+                valores={historialMuestras.map((m) => m.ram)}
+                serie="ram"
+                umbral={umbralRam}
+                etiquetaFiltro={etiquetaFiltro}
+                onAmpliar={() => setGraficoAmpliado('ram')}
+              />
               <TarjetaMetrica
                 title="Procesos Únicos"
                 value={totalProcesosAgrupados}
+                detalles={[
+                  { etiqueta: 'Monitoreados', valor: procesosMonitoreados.length },
+                  { etiqueta: 'Monitoreados en ejecución', valor: monitoreadosEnEjecucion },
+                ]}
                 subtitle={`Actualizado: ${horaServidor}`}
               />
             </section>
 
-            <div className={`dashboard-layout-desplegable ${sidebarAbierto ? 'con-sidebar' : 'sin-sidebar'}`}>
+            {/* Gráfico ampliado al hacer clic en la tarjeta de CPU o RAM */}
+            {graficoAmpliado && (
+              <PoligonoRecursos
+                key={graficoAmpliado}
+                historial={historialMuestras}
+                umbralCpu={umbralCpu}
+                umbralRam={umbralRam}
+                filtroProcesosNombres={polygonFilteredNames}
+                onRestablecerFiltro={handleResetPolygonFilter}
+                metricaInicial={graficoAmpliado}
+                onCerrar={handleCerrarGraficoAmpliado}
+              />
+            )}
+
+            {/* La columna derecha solo existe mientras hay un proceso abierto; si no, la tabla ocupa todo el ancho */}
+            <div className={`dashboard-layout-desplegable ${procesoSeleccionado ? 'con-detalle' : 'sin-detalle'}`}>
               <div className="columna-tabla">
                 <TablaProcesos
                   processes={procesos}
-                  onSelectProcess={(proc) => setProcesoSeleccionado(proc)}
+                  onSelectProcess={handleSeleccionarProceso}
                   selectedProcessNames={selectedProcessNames}
                   onSelectionChange={setSelectedProcessNames}
                   onAnalyzeInPolygon={handleAnalyzeInPolygon}
                   analizandoEnPoligonoNombres={polygonFilteredNames}
                   onApplyMassTag={handleApplyMassTag}
                   procesoSeleccionado={procesoSeleccionado}
+                  monitoreados={procesosMonitoreados}
+                  esAdmin={esAdministrador}
+                  onMonitorear={handleMonitorearProceso}
                 />
               </div>
 
-              <div className="wrapper-sidebar-lateral">
-                <button
-                  className="lengueta-desplegable"
-                  onClick={() => setSidebarAbierto(!sidebarAbierto)}
-                  title={sidebarAbierto ? 'Ocultar panel' : 'Mostrar panel y gráficos'}
-                >
-                  {sidebarAbierto ? '›' : '‹'}
-                </button>
-
-                {sidebarAbierto && (
-                  <aside className="columna-paneles-derecha">
-                    <PoligonoRecursos
-                      historial={historialMuestras}
-                      umbralAdvertencia={umbralAdvertencia}
-                      umbralCritico={umbralCritico}
-                      filtroProcesosNombres={polygonFilteredNames}
-                      onRestablecerFiltro={handleResetPolygonFilter}
-                    />
-                    <GraficoIndividual
-                      proceso={procesoSeleccionado}
-                      onAddTag={handleAddTagToProcess}
-                      onRemoveTag={handleRemoveTagFromProcess}
-                    />
-                  </aside>
-                )}
-              </div>
+              {procesoSeleccionado && (
+                <aside className="columna-paneles-derecha">
+                  {/* Detalle del proceso: solo aparece cuando se presiona un proceso de la tabla */}
+                  <PanelProceso
+                    proceso={procesoSeleccionado}
+                    procesoMonitoreado={procesoMonitoreadoSeleccionado}
+                    onCerrar={handleCerrarPanelProceso}
+                    reglasAlertas={reglasAlertas}
+                    esAdmin={esAdministrador}
+                    onCrearAlerta={handleCrearAlertaProceso}
+                    onActualizarAlerta={handleActualizarReglaAlerta}
+                    onEliminarAlerta={handleEliminarReglaAlerta}
+                    onMonitorear={handleMonitorearProceso}
+                    onDejarDeMonitorear={handleDejarDeMonitorear}
+                  />
+                </aside>
+              )}
             </div>
           </>
         )}
@@ -312,7 +422,6 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
         {vistaActiva === 'alertas' && (
           <TablaAlertas
             alertas={alertas}
-            onActualizarAlerta={handleActualizarAlerta}
             onMarcarReconocidas={handleMarcarReconocidas}
             onEliminarAlerta={handleEliminarAlerta}
             esAdmin={esAdministrador}
@@ -323,12 +432,9 @@ export function Dashboard({ usuario, onCerrarSesion, onActualizarUsuario }) {
       <MenuAjustes
         abierto={menuAjustesAbierto}
         onCerrar={() => setMenuAjustesAbierto(false)}
-        procesos={procesos}
         onActualizarUsuario={onActualizarUsuario}
-        reglasAlertas={reglasAlertas}
-        cpuTotal={cpuTotal}
-        ramTotal={ramTotal}
         usuario={usuario}
+        onCerrarSesion={onCerrarSesion}
         onUmbralesActualizados={handleUmbralesActualizados}
       />
     </div>

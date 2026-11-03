@@ -116,7 +116,7 @@
 }
 
 .badge-seleccion-count {
-  background-color: #2563eb;
+  background-color: var(--accent-blue);
   color: var(--on-accent);
   font-weight: 700;
   font-size: 0.75rem;
@@ -169,7 +169,7 @@
 
 .btn-limpiar-sel:hover {
   background-color: color-mix(in srgb, var(--accent-red) 15%, transparent);
-  border-color: #ef4444;
+  border-color: var(--accent-red);
   color: var(--accent-red);
 }
 
@@ -250,7 +250,7 @@
 }
 
 .chip-tag-btn:hover {
-  background-color: #2563eb;
+  background-color: var(--accent-blue);
   border-color: #3b82f6;
   color: var(--on-accent);
 }
@@ -276,7 +276,7 @@
 }
 
 .btn-aplicar-etiqueta {
-  background-color: #2563eb;
+  background-color: var(--accent-blue);
   border: none;
   color: var(--on-accent);
   font-size: 0.75rem;
@@ -357,8 +357,8 @@
 }
 
 .checkbox-custom-container input:checked ~ .checkbox-checkmark {
-  background-color: #2563eb;
-  border-color: #2563eb;
+  background-color: var(--accent-blue);
+  border-color: var(--accent-blue);
 }
 
 .checkbox-custom-container input:checked ~ .checkbox-checkmark::after {
@@ -369,8 +369,8 @@
 }
 
 .checkbox-custom-container input:indeterminate ~ .checkbox-checkmark {
-  background-color: #2563eb;
-  border-color: #2563eb;
+  background-color: var(--accent-blue);
+  border-color: var(--accent-blue);
 }
 
 .checkbox-custom-container input:indeterminate ~ .checkbox-checkmark::after {
@@ -422,20 +422,20 @@
 }
 
 /* =========================================
-   INDICADOR ACTIVO EN ROJO (#ef4444)
+   INDICADOR ACTIVO EN ROJO (var(--accent-red))
    ========================================= */
 
 .th-ordenable.columna-activa {
-  color: #ef4444 !important;
+  color: var(--accent-red) !important;
 }
 
 .th-ordenable.columna-activa .th-titulo {
-  color: #ef4444 !important;
+  color: var(--accent-red) !important;
   font-weight: 700;
 }
 
 .th-ordenable.columna-activa .indicador-triangulo {
-  color: #ef4444 !important;
+  color: var(--accent-red) !important;
   opacity: 1;
 }
 
@@ -566,7 +566,6 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 0.5rem 0.25rem;
-  margin-top: 0.75rem;
   border-top: 1px solid color-mix(in srgb, var(--border-strong) 40%, transparent);
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -625,4 +624,198 @@
   cursor: not-allowed;
   border-color: color-mix(in srgb, var(--border-strong) 30%, transparent);
   color: var(--text-subtle);
+}
+
+/* =========================================
+   FILTRO Y BADGES DE PROCESOS MONITOREADOS
+   ========================================= */
+
+.selector-filtro-monitoreo {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.2rem;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.selector-filtro-monitoreo button {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.selector-filtro-monitoreo button:hover {
+  color: var(--text-main);
+}
+
+.selector-filtro-monitoreo button.activo {
+  background-color: var(--bg-hover);
+  color: var(--accent-teal);
+  font-weight: 600;
+}
+
+.form-monitorear-tabla {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.input-monitorear-tabla {
+  flex: 1;
+  min-width: 220px;
+}
+
+.btn-monitorear-tabla {
+  background-color: var(--accent-blue);
+  border: none;
+  color: var(--on-accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-monitorear-tabla:hover:not(:disabled) {
+  background-color: var(--accent-blue-hover);
+}
+
+.btn-monitorear-tabla:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mensaje-monitoreo-tabla {
+  width: 100%;
+  font-size: 0.75rem;
+}
+
+.mensaje-monitoreo-tabla.exito {
+  color: var(--accent-green);
+}
+
+.mensaje-monitoreo-tabla.error {
+  color: var(--accent-red);
+}
+
+.badge-monitoreado-tabla,
+.badge-detenido-tabla {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-monitoreado-tabla {
+  background-color: color-mix(in srgb, var(--accent-green) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-green) 35%, transparent);
+  color: var(--accent-green);
+}
+
+.badge-detenido-tabla {
+  background-color: color-mix(in srgb, var(--accent-red) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-red) 35%, transparent);
+  color: var(--accent-red);
+}
+
+/* =========================================
+   COLUMNAS FIJAS CON TEXTO TRUNCADO
+   ========================================= */
+
+.tabla-datos {
+  table-layout: fixed;
+}
+
+.col-checkbox { width: 38px; }
+.col-proceso { width: auto; }
+.col-etiquetas { width: 22%; }
+.col-pids { width: 16%; }
+.col-cpu { width: 76px; }
+.col-ram { width: 76px; }
+
+/* Todas las celdas en una sola línea; lo que no entra se corta con "…" */
+.tabla-datos th,
+.tabla-datos td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nombre-con-indicador {
+  min-width: 0;
+}
+
+.texto-truncado {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nombre-con-indicador .badge-en-analisis,
+.nombre-con-indicador .badge-monitoreado-tabla,
+.nombre-con-indicador .badge-detenido-tabla {
+  flex-shrink: 0;
+}
+
+.td-etiquetas {
+  min-width: 0;
+}
+
+.tags-container {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.tags-container .badge-etiqueta {
+  flex-shrink: 0;
+}
+
+/* La última fila no lleva borde inferior */
+.tabla-datos tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =========================================
+   DIMENSIONES FIJAS
+   Todas las filas miden lo mismo (con o sin etiquetas): el contenido no cambia el tamaño
+   de la tabla, que solo ocupa las filas que tiene.
+   ========================================= */
+
+.tabla-datos {
+  --alto-fila: 42px;
+  --alto-encabezado: 40px;
+}
+
+.tabla-datos thead tr {
+  height: var(--alto-encabezado);
+}
+
+.tabla-datos tbody tr {
+  height: var(--alto-fila);
+}
+
+.tabla-datos td {
+  padding-top: 0;
+  padding-bottom: 0;
+  vertical-align: middle;
+}
+
+.tags-container .badge-etiqueta,
+.nombre-con-indicador .badge-en-analisis,
+.nombre-con-indicador .badge-monitoreado-tabla,
+.nombre-con-indicador .badge-detenido-tabla {
+  line-height: 1.2;
 }

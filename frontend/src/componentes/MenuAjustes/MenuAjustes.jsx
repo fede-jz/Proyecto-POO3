@@ -3,31 +3,23 @@ import { obtenerMiembros, actualizarRolMiembro } from '../../services/miembros';
 import { generarCodigoTelegram } from '../../services/authService';
 import { MenuRoles } from './MenuRoles';
 import { MenuGeneral } from './MenuGeneral';
-import { MenuExportacion } from './MenuExportacion';
 import { MenuPerfil } from './MenuPerfil';
 import './MenuAjustes.css';
 
+// Todos los ajustes en una sola vista: Mi perfil (con Telegram), General (umbrales y tema) y Usuarios y roles
 export const MenuAjustes = ({
   abierto,
   onCerrar,
-  procesos,
-  alertas,
-  cpuTotal,
-  ramTotal,
   usuario,
   onActualizarUsuario,
-  onUmbralesActualizados
+  onUmbralesActualizados,
+  onCerrarSesion
 }) => {
-  const [seccionActiva, setSeccionActiva] = useState('roles');
-
   // Configuración General
   const [tema, setTema] = useState(() => localStorage.getItem('sysmonitor_tema') || 'oscuro');
-  const [noMolestar, setNoMolestar] = useState(() => JSON.parse(localStorage.getItem('sysmonitor_no_molestar') || 'false'));
-  const [horaInicioNoMolestar, setHoraInicioNoMolestar] = useState(() => localStorage.getItem('sysmonitor_no_molestar_inicio') || '22:00');
-  const [horaFinNoMolestar, setHoraFinNoMolestar] = useState(() => localStorage.getItem('sysmonitor_no_molestar_fin') || '07:00');
-  const [idioma, setIdioma] = useState('es');
-  const [refrescoAuto, setRefrescoAuto] = useState(true);
-  const [notificacionesTelegram, setNotificacionesTelegram] = useState(true);
+
+  // Cerrar sesión pide una confirmación en el mismo botón
+  const [confirmarCierre, setConfirmarCierre] = useState(false);
 
   // Módulo de Roles y Miembros (Conectado a Base de Datos)
   const rolOperadorActual = usuario?.rol || 'Visualizador';
@@ -43,7 +35,7 @@ export const MenuAjustes = ({
   const [nuevoEmail, setNuevoEmail] = useState('');
   const [nuevoRol, setNuevoRol] = useState('Operador de Guardia');
 
-  // Sincronizar y cargar miembros de la BBDD cuando se abre la sección de roles
+  // Sincronizar y cargar miembros de la BBDD cuando se abren los ajustes
   const recargarMiembros = useCallback(async () => {
     setCargandoMiembros(true);
     try {
@@ -57,17 +49,12 @@ export const MenuAjustes = ({
   }, []);
 
   useEffect(() => {
-    if (abierto && seccionActiva === 'roles') {
+    if (abierto) {
       recargarMiembros();
     }
-  }, [abierto, seccionActiva, recargarMiembros]);
+  }, [abierto, recargarMiembros]);
 
-  // Exportación
-  const hoyStr = new Date().toISOString().split('T')[0];
-  const hace7DiasStr = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const [fechaInicio, setFechaInicio] = useState(hace7DiasStr);
-  const [fechaFin, setFechaFin] = useState(hoyStr);
-  const [filtroSeveridadExport, setFiltroSeveridadExport] = useState('todas');
+  // Aviso breve arriba del drawer (por ejemplo al cambiar un rol)
   const [alertaDescarga, setAlertaDescarga] = useState(null);
 
   // Telegram
@@ -123,15 +110,28 @@ export const MenuAjustes = ({
     return () => window.removeEventListener('keydown', handleKey);
   }, [abierto, onCerrar]);
 
+  // Mientras el menú está abierto se oculta el scroll de la página de atrás
+  useEffect(() => {
+    if (!abierto) return undefined;
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+    };
+  }, [abierto]);
+
   if (!abierto) return null;
+
+  // Al cerrar el drawer se descarta la confirmación de cierre de sesión que hubiera quedado abierta
+  const cerrarAjustes = () => {
+    setConfirmarCierre(false);
+    onCerrar();
+  };
 
   const mostrarMensajeDescarga = (mensaje) => {
     setAlertaDescarga(mensaje);
     setTimeout(() => setAlertaDescarga(null), 3000);
   };
-
-  const handleCambioFechaFin = (valor) => setFechaFin(valor > hoyStr ? hoyStr : valor);
-  const handleCambioFechaInicio = (valor) => setFechaInicio(valor > hoyStr ? hoyStr : valor);
 
   // Gestión de miembros asíncrona conectada al Backend
   const handleCambiarRolMiembro = async (id, nuevoRolValor) => {
@@ -196,27 +196,43 @@ export const MenuAjustes = ({
   };
 
   return (
-    <div className="menu-ajustes-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onCerrar(); }}>
+    <div className="menu-ajustes-backdrop" onClick={(e) => { if (e.target === e.currentTarget) cerrarAjustes(); }}>
       <div className="menu-ajustes-drawer">
         <div className="ajustes-drawer-header">
           <div className="ajustes-titulo">
             <span className="icono-gear">⚙️</span>
             <h3>Configuración & Sistema</h3>
           </div>
-          <button type="button" className="btn-cerrar-ajustes" onClick={onCerrar}>✕</button>
+          <button type="button" className="btn-cerrar-ajustes" onClick={cerrarAjustes}>✕</button>
         </div>
 
         {alertaDescarga && <div className="alerta-toast-descarga">{alertaDescarga}</div>}
 
-        <div className="ajustes-nav-secciones">
-          <button type="button" className={`tab-seccion ${seccionActiva === 'roles' ? 'activa' : ''}`} onClick={() => setSeccionActiva('roles')}>👥 Roles</button>
-          <button type="button" className={`tab-seccion ${seccionActiva === 'general' ? 'activa' : ''}`} onClick={() => setSeccionActiva('general')}>⚙️ General</button>
-          <button type="button" className={`tab-seccion ${seccionActiva === 'exportar' ? 'activa' : ''}`} onClick={() => setSeccionActiva('exportar')}>📊 Exportar</button>
-          <button type="button" className={`tab-seccion ${seccionActiva === 'perfil' ? 'activa' : ''}`} onClick={() => setSeccionActiva('perfil')}>👤 Perfil</button>
-        </div>
-
         <div className="ajustes-drawer-contenido">
-          {seccionActiva === 'roles' && (
+          <section className="seccion-ajustes">
+            <h4 className="titulo-seccion-ajustes">👤 Mi perfil</h4>
+            <MenuPerfil
+              usuario={usuario}
+              rolOperadorActual={rolOperadorActual}
+              codigoTelegram={codigoTelegram}
+              cargandoCodigo={cargandoCodigo}
+              handleSolicitarCodigoTelegram={handleSolicitarCodigoTelegram}
+              onActualizarUsuario={onActualizarUsuario}
+            />
+          </section>
+
+          <section className="seccion-ajustes">
+            <h4 className="titulo-seccion-ajustes">⚙️ General</h4>
+            <MenuGeneral
+              tema={tema}
+              setTema={setTema}
+              onUmbralesActualizados={onUmbralesActualizados}
+              esAdmin={esAdmin}
+            />
+          </section>
+
+          <section className="seccion-ajustes">
+            <h4 className="titulo-seccion-ajustes">👥 Usuarios y roles</h4>
             <MenuRoles
               miembros={miembros}
               cargandoMiembros={cargandoMiembros}
@@ -242,50 +258,34 @@ export const MenuAjustes = ({
               setPaginaActualRoles={setPaginaActualRoles}
               mostrarMensajeDescarga={mostrarMensajeDescarga}
             />
-          )}
-
-          {seccionActiva === 'general' && (
-            <MenuGeneral
-              tema={tema} setTema={setTema}
-              noMolestar={noMolestar} setNoMolestar={setNoMolestar}
-              horaInicioNoMolestar={horaInicioNoMolestar} setHoraInicioNoMolestar={setHoraInicioNoMolestar}
-              horaFinNoMolestar={horaFinNoMolestar} setHoraFinNoMolestar={setHoraFinNoMolestar}
-              idioma={idioma} setIdioma={setIdioma}
-              refrescoAuto={refrescoAuto} setRefrescoAuto={setRefrescoAuto}
-              notificacionesTelegram={notificacionesTelegram} setNotificacionesTelegram={setNotificacionesTelegram}
-            onUmbralesActualizados={onUmbralesActualizados}
-              esAdmin={esAdmin}
-            />
-          )}
-
-          {seccionActiva === 'exportar' && (
-            <MenuExportacion
-              hoyStr={hoyStr} fechaInicio={fechaInicio} fechaFin={fechaFin}
-              handleCambioFechaInicio={handleCambioFechaInicio} handleCambioFechaFin={handleCambioFechaFin}
-              filtroSeveridadExport={filtroSeveridadExport} setFiltroSeveridadExport={setFiltroSeveridadExport}
-              handleExportarGraficoPdf={() => {}} handleExportarGraficoSvg={() => {}} handleExportarGraficoPng={() => {}}
-              handleExportarProcesosExcel={() => {}} handleExportarProcesosPdf={() => {}}
-              handleExportarAlertasCsv={() => {}} handleExportarAlertasPdf={() => {}}
-              handleInformeGeneralCompleto={() => {}} procesos={procesos} alertas={alertas}
-            />
-          )}
-
-          {seccionActiva === 'perfil' && (
-            <MenuPerfil
-              usuario={usuario}
-              rolOperadorActual={rolOperadorActual}
-              codigoTelegram={codigoTelegram}
-              cargandoCodigo={cargandoCodigo}
-              handleSolicitarCodigoTelegram={handleSolicitarCodigoTelegram}
-              onActualizarUsuario={onActualizarUsuario}
-            />
-          )}
+          </section>
         </div>
 
         <div className="ajustes-drawer-footer">
-          <button type="button" className="btn-cerrar-sesion" onClick={() => { if (window.confirm('¿Cerrar sesión?')) { onCerrar(); } }}>
-            <span>🚪</span> <span>Cerrar Sesión Segura</span>
-          </button>
+          {confirmarCierre ? (
+            <div className="confirmar-cierre-sesion">
+              <span>¿Seguro que querés cerrar sesión?</span>
+              <div className="botones-confirmar-cierre">
+                <button
+                  type="button"
+                  className="btn-cerrar-sesion"
+                  onClick={() => {
+                    onCerrar();
+                    if (onCerrarSesion) onCerrarSesion();
+                  }}
+                >
+                  Sí, cerrar sesión
+                </button>
+                <button type="button" className="btn-cancelar-cierre" onClick={() => setConfirmarCierre(false)}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" className="btn-cerrar-sesion" onClick={() => setConfirmarCierre(true)}>
+              <span>🚪</span> <span>Cerrar sesión</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

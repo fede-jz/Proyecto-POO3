@@ -1,4 +1,5 @@
 import React, { useState, useId } from 'react';
+import { normalizarNombreProceso } from '../../services/procesos';
 import './TablaProcesos.css';
 
 const ELEMENTOS_POR_PAGINA = 10;
@@ -22,8 +23,17 @@ export const TablaProcesos = ({
   analizandoEnPoligonoNombres = null,
   onApplyMassTag,
   procesoSeleccionado,
+  monitoreados = [],
+  esAdmin = false,
+  onMonitorear,
 }) => {
   const [busqueda, setBusqueda] = useState('');
+
+  // Filtro Todos / Monitoreados y formulario para monitorear un proceso por nombre (solo admins)
+  const [filtroMonitoreo, setFiltroMonitoreo] = useState('todos');
+  const [nombreAMonitorear, setNombreAMonitorear] = useState('');
+  const [agregandoMonitoreo, setAgregandoMonitoreo] = useState(false);
+  const [mensajeMonitoreo, setMensajeMonitoreo] = useState(null);
 
   // Filtros de visualización derivados de la selección
   const [soloSeleccionados, setSoloSeleccionados] = useState(false);
@@ -59,11 +69,43 @@ export const TablaProcesos = ({
     return '▲';
   };
 
+  // Procesos monitoreados (guardados en la base), indexados por nombre normalizado
+  const monitoreadosPorNombre = new Map(monitoreados.map((p) => [normalizarNombreProceso(p.nombre), p]));
+  const estaMonitoreado = (nombre) => monitoreadosPorNombre.has(normalizarNombreProceso(nombre));
+
+  // En "Monitoreados" se muestran los que están corriendo y también los que están detenidos (sin consumo)
+  let listaMonitoreo = processes;
+  if (filtroMonitoreo === 'monitoreados') {
+    const corriendo = new Set(processes.map((p) => normalizarNombreProceso(p.name)));
+    const detenidos = monitoreados
+      .filter((p) => !corriendo.has(normalizarNombreProceso(p.nombre)))
+      .map((p) => ({ name: p.nombre, pids: [], cpu_percent: 0, memory_percent: 0, tags: [], enEjecucion: false }));
+    listaMonitoreo = [...processes.filter((p) => estaMonitoreado(p.name)), ...detenidos];
+  }
+
+  // Sugerencias para monitorear: procesos que están corriendo y todavía no se monitorean
+  const sugerenciasMonitoreo = processes.filter((p) => !estaMonitoreado(p.name)).map((p) => p.name);
+
+  const handleMonitorearPorNombre = async () => {
+    const nombre = nombreAMonitorear.trim();
+    if (!nombre || !onMonitorear) return;
+    setAgregandoMonitoreo(true);
+    setMensajeMonitoreo(null);
+    const res = await onMonitorear(nombre);
+    setAgregandoMonitoreo(false);
+    if (res?.success) {
+      setNombreAMonitorear('');
+      setMensajeMonitoreo({ tipo: 'exito', texto: `Se comenzó a monitorear "${res.proceso?.nombre || nombre}".` });
+    } else {
+      setMensajeMonitoreo({ tipo: 'error', texto: res?.mensaje || 'No se pudo monitorear el proceso.' });
+    }
+  };
+
   // Búsqueda por nombre: coincidencia parcial sin distinguir mayúsculas, se actualiza con cada refresco de la lista
   const termino = busqueda.trim().toLowerCase();
   let listaBase = termino
-    ? processes.filter((p) => p.name.toLowerCase().includes(termino))
-    : processes;
+    ? listaMonitoreo.filter((p) => p.name.toLowerCase().includes(termino))
+    : listaMonitoreo;
 
   // Filtro por selección (si el usuario activa "Mostrar solo seleccionados" u "Ocultar desmarcados")
   if (soloSeleccionados || ocultarDesmarcados) {
@@ -161,11 +203,37 @@ export const TablaProcesos = ({
         <div>
           <h3 className="tabla-titulo">Procesos del Sistema</h3>
           <span className="tabla-subtitulo">
-            {totalElementos} procesos detectados {soloSeleccionados ? '(Filtro activo)' : ''}
+            {totalElementos} {filtroMonitoreo === 'monitoreados' ? 'procesos monitoreados' : 'procesos detectados'}{' '}
+            {soloSeleccionados ? '(Filtro activo)' : ''}
           </span>
         </div>
 
         <div className="controles-filtro">
+          {/* Filtro Todos / Monitoreados */}
+          <div className="selector-filtro-monitoreo" role="group" aria-label="Filtrar procesos">
+            <button
+              type="button"
+              className={filtroMonitoreo === 'todos' ? 'activo' : ''}
+              onClick={() => {
+                setFiltroMonitoreo('todos');
+                setPaginaActual(1);
+              }}
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              className={filtroMonitoreo === 'monitoreados' ? 'activo' : ''}
+              onClick={() => {
+                setFiltroMonitoreo('monitoreados');
+                setPaginaActual(1);
+              }}
+              title="Procesos a los que se les guarda el historial de consumo"
+            >
+              Monitoreados ({monitoreados.length})
+            </button>
+          </div>
+
           <input
             type="text"
             placeholder="Buscar proceso..."
@@ -179,6 +247,41 @@ export const TablaProcesos = ({
         </div>
       </div>
 
+      {/* Monitorear un proceso por nombre, aunque no esté corriendo (solo en el filtro Monitoreados y para admins) */}
+      {filtroMonitoreo === 'monitoreados' && esAdmin && (
+        <div className="form-monitorear-tabla">
+          <input
+            type="text"
+            list="sugerencias-monitoreo-tabla"
+            placeholder="Monitorear un proceso por nombre (ej: postgres.exe)"
+            value={nombreAMonitorear}
+            onChange={(e) => setNombreAMonitorear(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleMonitorearPorNombre();
+            }}
+            className="input-busqueda input-monitorear-tabla"
+          />
+          <datalist id="sugerencias-monitoreo-tabla">
+            {sugerenciasMonitoreo.map((nombre) => (
+              <option key={nombre} value={nombre} />
+            ))}
+          </datalist>
+          <button
+            type="button"
+            className="btn-monitorear-tabla"
+            disabled={agregandoMonitoreo || !nombreAMonitorear.trim()}
+            onClick={handleMonitorearPorNombre}
+          >
+            {agregandoMonitoreo ? 'Agregando...' : '+ Monitorear'}
+          </button>
+          {mensajeMonitoreo && (
+            <span className={`mensaje-monitoreo-tabla ${mensajeMonitoreo.tipo}`} role="status">
+              {mensajeMonitoreo.texto}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Barra de Acciones Contextuales basada en la Selección */}
       {cantidadSeleccionados > 0 && (
         <div className="barra-acciones-seleccion">
@@ -190,15 +293,15 @@ export const TablaProcesos = ({
           </div>
 
           <div className="seleccion-botones">
-            {/* 1. Analizar en el polígono */}
+            {/* 1. Analizar la selección en las tarjetas de CPU y RAM */}
             <button
               type="button"
               className={`btn-accion-sel ${poligonofiltroActivo ? 'activo' : ''}`}
               onClick={() => onAnalyzeInPolygon && onAnalyzeInPolygon(selectedProcessNames)}
-              title="Filtrar el gráfico de recursos para mostrar únicamente los procesos seleccionados"
+              title="Mostrar en las tarjetas de CPU y RAM el consumo sumado de los procesos seleccionados"
             >
               <span className="icono-accion">📊</span>
-              <span>{poligonofiltroActivo ? 'Analizando en Polígono' : 'Analizar en Polígono'}</span>
+              <span>{poligonofiltroActivo ? 'Analizando selección' : 'Analizar selección'}</span>
             </button>
 
             {/* 2. Filtrar tabla (Mostrar solo seleccionados) */}
@@ -312,6 +415,15 @@ export const TablaProcesos = ({
       {/* Tabla con encabezados interactivos estilo Windows Explorer */}
       <div className="tabla-scroll-wrapper">
         <table className="tabla-datos">
+          {/* Anchos fijos: el contenido largo se corta con "…" y se ve completo al pasar el mouse */}
+          <colgroup>
+            <col className="col-checkbox" />
+            <col className="col-proceso" />
+            <col className="col-etiquetas" />
+            <col className="col-pids" />
+            <col className="col-cpu" />
+            <col className="col-ram" />
+          </colgroup>
           <thead>
             <tr>
               {/* Columna Checkbox Todos */}
@@ -397,6 +509,7 @@ export const TablaProcesos = ({
               procesosAMostrar.map((proc, index) => {
                 const estaSeleccionado = selectedProcessNames.includes(proc.name);
                 const esInspeccionado = procesoSeleccionado?.name === proc.name;
+                const detenido = proc.enEjecucion === false;
 
                 return (
                   <tr
@@ -424,13 +537,23 @@ export const TablaProcesos = ({
                     {/* Nombre */}
                     <td className="nombre-proceso">
                       <div className="nombre-con-indicador">
-                        {proc.name}
+                        <span className="texto-truncado" title={proc.name}>{proc.name}</span>
                         {analizandoEnPoligonoNombres?.includes(proc.name) && (
                           <span
                             className="badge-en-analisis"
-                            title="Incluido en el análisis activo del polígono"
+                            title="Incluido en el análisis de la selección"
                           >
-                            📈 En Polígono
+                            📈 En análisis
+                          </span>
+                        )}
+                        {estaMonitoreado(proc.name) && (
+                          <span className="badge-monitoreado-tabla" title="Se guarda su historial de consumo">
+                            Monitoreado
+                          </span>
+                        )}
+                        {detenido && (
+                          <span className="badge-detenido-tabla" title="El proceso no se está ejecutando">
+                            Detenido
                           </span>
                         )}
                       </div>
@@ -438,7 +561,7 @@ export const TablaProcesos = ({
 
                     {/* Etiquetas */}
                     <td className="td-etiquetas">
-                      <div className="tags-container">
+                      <div className="tags-container" title={proc.tags?.length ? proc.tags.join(', ') : undefined}>
                         {proc.tags && proc.tags.length > 0 ? (
                           proc.tags.map((tag) => (
                             <span key={tag} className="badge-etiqueta">
@@ -452,15 +575,15 @@ export const TablaProcesos = ({
                     </td>
 
                     {/* PIDs */}
-                    <td className="pids-proceso">
+                    <td className="pids-proceso" title={proc.pids?.length ? proc.pids.join(', ') : undefined}>
                       {proc.pids && proc.pids.length > 0 ? proc.pids.join(', ') : 'N/A'}
                     </td>
 
                     {/* CPU */}
-                    <td className="cpu-proceso text-right">{proc.cpu_percent}%</td>
+                    <td className="cpu-proceso text-right">{detenido ? '—' : `${proc.cpu_percent}%`}</td>
 
                     {/* RAM */}
-                    <td className="ram-proceso text-right">{proc.memory_percent}%</td>
+                    <td className="ram-proceso text-right">{detenido ? '—' : `${proc.memory_percent}%`}</td>
                   </tr>
                 );
               })
@@ -471,6 +594,8 @@ export const TablaProcesos = ({
                     ? `No se encontró ningún proceso que contenga "${busqueda}"`
                     : soloSeleccionados
                     ? 'No hay procesos seleccionados en este momento'
+                    : filtroMonitoreo === 'monitoreados'
+                    ? 'Todavía no se monitorea ningún proceso'
                     : 'No hay procesos disponibles'}
                 </td>
               </tr>
