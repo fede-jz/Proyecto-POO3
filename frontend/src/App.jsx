@@ -46,7 +46,7 @@ export function App() {
 
   if (cargando) {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#fff' }}>
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)', color: 'var(--text-main)' }}>
         <p>Restaurando sesión...</p>
       </div>
     );

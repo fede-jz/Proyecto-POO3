@@ -18,7 +18,7 @@
 .pm-switch-button {
   background: none;
   border: none;
-  color: #39a2ff;
+  color: var(--accent-link);
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
@@ -27,7 +27,7 @@
 }
 
 .pm-switch-button:hover {
-  color: #78c5ff;
+  color: var(--accent-link-hover);
   text-decoration: underline;
 }
 

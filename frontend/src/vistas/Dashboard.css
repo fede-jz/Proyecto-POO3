@@ -194,9 +194,9 @@
 
 .pm-btn-logout {
   padding: 6px 14px;
-  background: rgba(217, 56, 56, 0.12);
-  border: 1px solid rgba(217, 56, 56, 0.35);
-  color: #ff6b6b;
+  background: color-mix(in srgb, var(--accent-red) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-red) 35%, transparent);
+  color: var(--accent-red);
   border-radius: 6px;
   font-size: 0.78rem;
   font-weight: 600;
@@ -205,7 +205,7 @@
 }
 
 .pm-btn-logout:hover {
-  background: rgba(217, 56, 56, 0.25);
+  background: color-mix(in srgb, var(--accent-red) 25%, transparent);
   border-color: #d93838;
-  color: #ff8585;
+  color: var(--accent-red);
 }
